@@ -1,0 +1,267 @@
+/* General Reset */
+* { 
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background-image: url('BG.webp');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #333;
+}
+
+/* ====== Navbar Styling ====== */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #004080;
+    color: white;
+    padding: 15px 30px;
+}
+
+/* ✅ Updated Title Styling */
+.navbar-title {
+    font-size: 2.2rem; /* Title ka size thoda bara kiya */
+    font-weight: bold; /* Sirf isko bold kiya */
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.nav-links a:hover {
+    background-color: #0066cc;
+    transform: scale(1.1);
+}
+
+/* ====== Hide all sections by default ====== */
+section {
+    display: none;
+}
+
+/* Show only the home section by default */
+#home {
+    display: block;
+}
+
+/* ====== Home Section Styling ====== */
+.intro {
+    max-width: 800px;
+    margin: 100px auto;
+    text-align: center;
+    font-size: 1.6rem; /* Thoda aur bada kiya */
+    background: rgba(255, 255, 255, 0.8);  
+    padding: 30px;
+    border-radius: 15px;
+    color: #004080;
+    font-weight: bold;
+    line-height: 1.8;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.intro:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ====== Section Headings ====== */
+#products-section h2,
+#cart-section h2,
+#history-section h2,
+.login-container h2,
+.complaint-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #004080;
+    margin-bottom: 20px;
+}
+
+/* ====== Common Styling for Forms & Sections ====== */
+.login-container, .complaint-container, 
+#cart-section, #products-section, #history-section {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 40px;
+    background-color: rgba(255, 255, 255, 0.98);
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out;
+}
+
+.login-container:hover, .complaint-container:hover,
+#cart-section:hover, #products-section:hover, #history-section:hover {
+    transform: scale(1.02);
+}
+
+/* ====== Form Styling ====== */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+label {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #004080;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* ====== Input Fields ====== */
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus {
+    border-color: #004080;
+    outline: none;
+    box-shadow: 0px 0px 10px rgba(0, 64, 128, 0.4);
+}
+
+/* ====== Buttons Styling ====== */
+button {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.2rem;
+    background: linear-gradient(45deg, #004080, #0066cc);
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 8px rgba(0, 64, 128, 0.3);
+}
+
+button:hover {
+    background: linear-gradient(45deg, #003366, #0055aa);
+    transform: scale(1.05);
+    box-shadow: 0px 6px 12px rgba(0, 64, 128, 0.5);
+}
+
+/* ====== Cart Items & Products List Styling ====== */
+#product-list, #cart-items {
+    margin-top: 20px;
+    text-align: left;
+}
+
+/* ✅ Updated Products Section to Match Cart Section */
+.product-item, .cart-item, .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 12px 18px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #004080;
+}
+
+/* ✅ Updated Remove Button to Match Add to Cart Button */
+.remove-from-cart-btn {
+    background: linear-gradient(45deg, #004080, #0066cc);
+    color: white;
+    font-weight: bold;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.remove-from-cart-btn:hover {
+    background: linear-gradient(45deg, #003366, #0055aa);
+    transform: scale(1.05);
+}
+
+/* ✅ If Item is in Cart - Change Button to Blue */
+.in-cart {
+    background: linear-gradient(45deg, #004080, #0066cc) !important;
+    color: white;
+    font-weight: bold;
+}
+
+.in-cart:hover {
+    background: linear-gradient(45deg, #003366, #0055aa) !important;
+}
+
+/* ✅ Purchase History */
+.history-item {
+    text-align: left;
+}
+
+.view-details-btn {
+    background: linear-gradient(45deg, #004080, #0066cc);
+    color: white;
+    font-weight: bold;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-details-btn:hover {
+    background: linear-gradient(45deg, #003366, #0055aa);
+    transform: scale(1.05);
+}
+
+/* ====== Map Styling ====== */
+#map {
+    width: 100%;
+    height: 300px;
+    margin: 15px 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+}
+
+/* ====== Responsive Design ====== */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .login-container, .complaint-container, 
+    #cart-section, #products-section, #history-section {
+        max-width: 90%;
+        padding: 30px;
+    }
+
+    .intro {
+        font-size: 1.3rem;
+        padding: 20px;
+    }
+}

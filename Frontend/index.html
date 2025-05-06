@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govt Commodities Price Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Govt Commodities Price Calculator</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#login-section">Login/Register</a></li>
+            <li><a href="#products-section">Products</a></li>
+            <li><a href="#cart-section">Cart</a></li>
+            <li><a href="#complaint-section">Complaints</a></li>
+            <li><a href="#history-section">History</a></li>
+        </ul>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home">
+        <div class="intro">
+            This project, the Government Commodities Price Calculator, provides users with daily updated prices of essential commodities. Users can also report unfair practices directly to local authorities.
+        </div>
+    </section>
+
+    <!-- Login Section -->
+    <section id="login-section">
+        <div class="login-container">
+            <h2>Login/Register</h2>
+            <form id="authForm">
+                <div id="signupFields" class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email address" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" id="authButton">Register</button>
+                <p id="toggleAuth">
+                    Already registered? <span onclick="toggleAuthMode()">Login</span>
+                </p>
+            </form>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products-section">
+        <h2>Select a Category</h2>
+        <div id="category-dropdown">
+            <button onclick="showProducts('fruits')">Fruits</button>
+            <button onclick="showProducts('vegetables')">Vegetables</button>
+        </div>
+        <div id="product-list"></div>
+    </section>
+
+    <!-- Cart Section -->
+    <section id="cart-section">
+        <h2>Your Cart</h2>
+        <div id="cart-items">
+            <p>No items in the cart yet.</p>
+        </div>
+        <button id="calculate-bill-btn" onclick="calculateBill()">Calculate Bill</button>
+        <div id="total-bill"></div>
+    </section>
+
+    <!-- Complaint Section -->
+    <section id="complaint-section">
+        <div class="complaint-container">
+            <h2>Submit a Complaint</h2>
+            <form id="complaintForm" onsubmit="submitComplaint(event)">
+                <div class="form-group">
+                    <label for="shopkeeperName">Shopkeeper's Name</label>
+                    <input type="text" id="shopkeeperName" placeholder="Enter shopkeeper's name" required>
+                </div>
+                <div class="form-group">
+                    <label for="complaintDescription">Complaint Description</label>
+                    <textarea id="complaintDescription" rows="4" placeholder="Describe your complaint" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="dcEmail">DC's Email</label>
+                    <input type="email" id="dcEmail" placeholder="Enter District Commissioner's email" required>
+                </div>
+                <div class="form-group">
+                    <label for="shopLocation">Shop Location</label>
+                    <div id="map"></div>
+                </div>
+                <div class="form-group">
+                    <label for="shopImage">Upload Shop Image</label>
+                    <input type="file" id="shopImage" accept="image/*" capture="camera">
+                </div>
+                <button type="submit">Submit Complaint</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- History Section -->
+    <section id="history-section">
+        <h2>Purchase History</h2>
+        <div id="history-list">
+            <p>No history available yet.</p>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+
+</body>
+</html>

@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Govt Commodities Price Calculator</title>
+    <title>Your Cart</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
     <nav class="navbar">
         <div class="logo">Govt Commodities Price Calculator</div>
         <ul class="nav-links">
@@ -19,14 +20,19 @@
         </ul>
     </nav>
 
-    <div id="content-area">
-        <section id="home">
-            <div class="intro">
-                This project, the Government Commodities Price Calculator, provides users with daily updated prices of essential commodities. Users can also report unfair practices directly to local authorities.
-            </div>
-        </section>
-    </div>
-
+    <section id="cart-section">
+        <h2>Your Cart</h2>
+        <div id="cart-items">
+            <p>No items in the cart yet.</p>
+        </div>
+        <button id="calculate-bill-btn" onclick="calculateBill()">Calculate Bill</button>
+        <div id="total-bill"></div>
+    </section>
     <script src="script.js"></script>
-    </body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            updateCartDisplay();
+        });
+    </script>
+</body>
 </html>

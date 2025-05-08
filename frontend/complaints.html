@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit a Complaint</title>
+    <link rel="stylesheet" href="styles.css">
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Govt Commodities Price Calculator</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="auth/login.html">Login/Register</a></li>
+            <li><a href="products/products.html">Products</a></li>
+            <li><a href="cart.html">Cart</a></li>
+            <li><a href="complaints.html">Complaints</a></li>
+            <li><a href="history.html">History</a></li>
+        </ul>
+    </nav>
+
+    <section id="complaint-section">
+        <div class="complaint-container">
+            <h2>Submit a Complaint</h2>
+            <form id="complaintForm" onsubmit="submitComplaint(event)">
+                <div class="form-group">
+                    <label for="shopkeeperName">Shopkeeper's Name</label>
+                    <input type="text" id="shopkeeperName" placeholder="Enter shopkeeper's name" required>
+                </div>
+                <div class="form-group">
+                    <label for="complaintDescription">Complaint Description</label>
+                    <textarea id="complaintDescription" rows="4" placeholder="Describe your complaint" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="dcEmail">DC's Email</label>
+                    <input type="email" id="dcEmail" placeholder="Enter District Commissioner's email" required>
+                </div>
+                <div class="form-group">
+                    <label for="shopLocation">Shop Location</label>
+                    <div id="map"></div>
+                </div>
+                <div class="form-group">
+                    <label for="shopImage">Upload Shop Image</label>
+                    <input type="file" id="shopImage" accept="image/*" capture="camera">
+                </div>
+                <button type="submit">Submit Complaint</button>
+            </form>
+        </div>
+    </section>
+    <script src="script.js"></script>
+    <script>
+        function submitComplaint(event) {
+            event.preventDefault();
+            const shopkeeperName = document.getElementById("shopkeeperName").value;
+            const complaintDescription = document.getElementById("complaintDescription").value;
+            const dcEmail = document.getElementById("dcEmail").value;
+            const shopLocation = document.querySelector('#mapMarkerLat').value + ', ' + document.querySelector('#mapMarkerLng').value; // Assuming you add hidden fields for lat/lng
+            const shopImage = document.getElementById("shopImage").files[0];
+
+            console.log("Complaint submitted:", { shopkeeperName, complaintDescription, dcEmail, shopLocation, shopImage });
+            alert("Complaint submitted successfully!");
+            document.getElementById("complaintForm").reset();
+        }
+
+        let map;
+        let marker;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 30.0452, lng: 72.3489 },
+                zoom: 15,
+            });
+
+            marker = new google.maps.Marker({
+                position: { lat: 30.0452, lng: 72.3489 },
+                map: map,
+                draggable: true,
+            });
+
+            // Add hidden input fields to store the marker's coordinates
+            const latInput = document.createElement('input');
+            latInput.type = 'hidden';
+            latInput.id = 'mapMarkerLat';
+            latInput.value = marker.getPosition().lat();
+            document.getElementById('complaintForm').appendChild(latInput);
+
+            const lngInput = document.createElement('input');
+            lngInput.type = 'hidden';
+            lngInput.id = 'mapMarkerLng';
+            lngInput.value = marker.getPosition().lng();
+            document.getElementById('complaintForm').appendChild(lngInput);
+
+            google.maps.event.addListener(marker, "dragend", function () {
+                const position = marker.getPosition();
+                console.log('Marker moved to:', position.lat(), position.lng());
+                document.getElementById('mapMarkerLat').value = position.lat();
+                document.getElementById('mapMarkerLng').value = position.lng();
+            });
+        }
+    </script>
+</body>
+</html>

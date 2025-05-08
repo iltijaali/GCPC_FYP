@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Govt Commodities Price Calculator</title>
+    <title>Purchase History</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,14 +19,18 @@
         </ul>
     </nav>
 
-    <div id="content-area">
-        <section id="home">
-            <div class="intro">
-                This project, the Government Commodities Price Calculator, provides users with daily updated prices of essential commodities. Users can also report unfair practices directly to local authorities.
-            </div>
-        </section>
-    </div>
-
+    <section id="history-section">
+        <h2>Purchase History</h2>
+        <div id="history-list">
+            <p>No history available yet.</p>
+        </div>
+        <div id="history-details" style="display: none;"></div>
+    </section>
     <script src="script.js"></script>
-    </body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadHistory();
+        });
+    </script>
+</body>
 </html>

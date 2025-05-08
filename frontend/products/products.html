@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <section id="products-section">
+        <h2>Explore Our Products</h2>
+        <div id="category-navigation">
+            <a href="fruits.html" class="category-button">Fruits</a>
+            <a href="vegetables.html" class="category-button">Vegetables</a>
+        </div>
+        <div id="product-list">
+            </div>
+    </section>
+    <script src="../script.js"></script>
+    <style>
+        #category-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .category-button {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+            background: linear-gradient(45deg, #004080, #0066cc);
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .category-button:hover {
+            background: linear-gradient(45deg, #003366, #0055aa);
+        }
+
+        #product-list {
+            text-align: center; /* Optionally center the "Select a category" message */
+        }
+    </style>
+</body>
+</html>

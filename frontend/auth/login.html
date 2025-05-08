@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Govt Commodities Price Calculator</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="register.html">Login/Register</a></li>
+            <li><a href="../products/products.html">Products</a></li>
+            <li><a href="../cart.html">Cart</a></li>
+            <li><a href="../complaints.html">Complaints</a></li>
+            <li><a href="../history.html">History</a></li>
+        </ul>
+    </nav>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email address" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Login</button>
+            <p>
+                New here? <a href="register.html">Register</a>
+            </p>
+        </form>
+    </div>
+    <script src="../script.js"></script>
+</body>
+</html>

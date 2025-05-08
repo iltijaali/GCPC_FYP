@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Govt Commodities Price Calculator</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="login.html">Login/Register</a></li>
+            <li><a href="../products/products.html">Products</a></li>
+            <li><a href="../cart.html">Cart</a></li>
+            <li><a href="../complaints.html">Complaints</a></li>
+            <li><a href="../history.html">History</a></li>
+        </ul>
+    </nav>
+
+    <div class="login-container">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter your email address" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Register</button>
+            <p>
+                Already registered? <a href="login.html">Login</a>
+            </p>
+        </form>
+    </div>
+    <script src="../script.js"></script>
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const nameField = document.getElementById("name");
+            const emailField = document.getElementById("email");
+            const passwordField = document.getElementById("password");
+
+            const userData = JSON.parse(localStorage.getItem("userData")) || {};
+
+            if (!nameField.value || !emailField.value || !passwordField.value) {
+                alert("All fields are required for registration!");
+                return;
+            }
+
+            if (userData[emailField.value]) {
+                alert("Email already registered! Try logging in.");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            userData[emailField.value] = {
+                name: nameField.value,
+                password: passwordField.value
+            };
+
+            localStorage.setItem("userData", JSON.stringify(userData));
+            alert("Registration successful! Please login.");
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

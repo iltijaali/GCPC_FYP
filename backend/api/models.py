@@ -1,6 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
+# TODO:
+# Remove the following models
+# 1. OrderHistory
+# 2. OrderItem
+# Create Models for:
+# 1. CartHistroy
+# (one to many with products)
+# (1 to 1 with User)
+# Update the Cart Model:
+# 1. Alter products field use 1 to many with products
+
 # Custom User Model
 class User(AbstractUser):
     # your fields...

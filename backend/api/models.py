@@ -1,37 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
-# TODO:
-# Remove the following models
-# 1. OrderHistory
-# 2. OrderItem
-# Create Models for:
-# 1. CartHistroy
-# (one to many with products)
-# (1 to 1 with User)
-# Update the Cart Model:
-# 1. Alter products field use 1 to many with products
-
 # Custom User Model
 class User(AbstractUser):
-    # your fields...
-
-
     groups = models.ManyToManyField(
         Group,
-        related_name='gcpc_user_set',  # <--- change related_name
+        related_name='gcpc_user_set',  # changed related_name
         blank=True,
         help_text='The groups this user belongs to.',
         verbose_name='groups',
     )
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name='gcpc_user_permissions',  # <--- change related_name
+        related_name='gcpc_user_permissions',  # changed related_name
         blank=True,
         help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
-
 
 # Product Model (for fruits, vegetables, etc.)
 class Product(models.Model):
@@ -48,37 +33,32 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} - Rs. {self.price}"
 
+# Cart History Model (1-to-1 with user, 1-to-many with Cart items)
+class CartHistory(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateTimeField(auto_now_add=True)
 
-# Cart Model
+    def __str__(self):
+        return f"Cart History for {self.user.username} on {self.date.strftime('%Y-%m-%d %H:%M:%S')}"
+
+    def get_products(self):
+        return self.carts.all()  # related_name from Cart model
+
+# Cart Model (1-to-many with products, connected to CartHistory)
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     added_date = models.DateTimeField(auto_now_add=True)
+    cart_history = models.ForeignKey('CartHistory', related_name='carts', on_delete=models.CASCADE, null=True, blank=True)
+
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name} x {self.quantity}"
 
     def get_total_price(self):
         return self.product.price * self.quantity
-
-
-# Order History Model
-class OrderHistory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    products = models.ManyToManyField(Product, through='OrderItem')
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Order by {self.user.username} on {self.date}"
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(OrderHistory, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
-
 
 # Complaint Model
 class Complaint(models.Model):
@@ -97,7 +77,6 @@ class Complaint(models.Model):
 
     def __str__(self):
         return f"Complaint by {self.user.username} - {self.status}"
-
 
 # Notification Model
 class Notification(models.Model):

@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions
-from .models import User, Product, Cart, OrderHistory, Complaint, Notification
+from .models import User, Product, Cart, CartHistory, Complaint, Notification
 from .serializers import *
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -25,9 +25,9 @@ class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
 
 
-class OrderHistoryViewSet(viewsets.ModelViewSet):
-    queryset = OrderHistory.objects.all()
-    serializer_class = OrderHistorySerializer
+class CartHistoryViewSet(viewsets.ModelViewSet):  # ✅ Renamed from OrderHistory
+    queryset = CartHistory.objects.all()
+    serializer_class = CartHistorySerializer
 
 
 class ComplaintViewSet(viewsets.ModelViewSet):

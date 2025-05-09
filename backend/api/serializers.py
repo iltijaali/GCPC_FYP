@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Product, Cart, OrderHistory, OrderItem, Complaint, Notification
+from .models import User, Product, Cart, CartHistory, Complaint, Notification  # Correct import
 from django.contrib.auth.password_validation import validate_password
 
 
@@ -7,7 +7,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
-
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -41,20 +40,13 @@ class CartSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer()
+# CartHistorySerializer - Correcting from OrderHistorySerializer
+class CartHistorySerializer(serializers.ModelSerializer):
+    products = ProductSerializer(many=True)  # A cart history contains multiple products
 
     class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity']
-
-
-class OrderHistorySerializer(serializers.ModelSerializer):
-    products = OrderItemSerializer(source='orderitem_set', many=True)
-
-    class Meta:
-        model = OrderHistory
-        fields = ['id', 'user', 'products', 'total_price', 'date']
+        model = CartHistory
+        fields = ['user', 'products', 'total_price', 'date']
 
 
 class ComplaintSerializer(serializers.ModelSerializer):

@@ -115,4 +115,3 @@ function calculateBill() {
 }
 
 // ====== Purchase History Section ======
-const purchaseHistory = JSON.

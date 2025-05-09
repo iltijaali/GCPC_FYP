@@ -1,10 +1,11 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, mixins
 from .models import User, Product, Cart, CartHistory, Complaint, Notification
 from .serializers import *
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.RetrieveModelMixin,
+                  viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

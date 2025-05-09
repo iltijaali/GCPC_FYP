@@ -40,10 +40,10 @@ INSTALLED_APPS = [
     #third party apps
     'rest_framework',
     'rest_framework_simplejwt',
+     'corsheaders',
     #my apps
     'api',
-
-]
+] 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +53,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # CORS Middleware
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'gcpc_fyp.urls'
@@ -144,3 +147,12 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
+
+
+# setup django cors headers
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Example for frontend running on localhost:3000
+    "http://127.0.0.1:5500", # Example for frontend running on localhost:5500
+]

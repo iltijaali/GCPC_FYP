@@ -42,6 +42,7 @@
         </form>
     </div>
     <script src="../script.js"></script>
+    <script src="../api.js"></script>
     <script>
         document.getElementById("registerForm").addEventListener("submit", function (event) {
             event.preventDefault();
@@ -50,16 +51,9 @@
             const emailField = document.getElementById("email");
             const passwordField = document.getElementById("password");
 
-            const userData = JSON.parse(localStorage.getItem("userData")) || {};
 
             if (!nameField.value || !emailField.value || !passwordField.value) {
                 alert("All fields are required for registration!");
-                return;
-            }
-
-            if (userData[emailField.value]) {
-                alert("Email already registered! Try logging in.");
-                window.location.href = 'login.html';
                 return;
             }
 
@@ -67,9 +61,8 @@
                 name: nameField.value,
                 password: passwordField.value
             };
-
-            localStorage.setItem("userData", JSON.stringify(userData));
-            alert("Registration successful! Please login.");
+            const data = register(nameField.value, emailField.value, passwordField.value);
+            alert(`Registration successful! Please login.${data}`);
             window.location.href = 'login.html';
         });
     </script>

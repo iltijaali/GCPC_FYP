@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 
 # Custom User Model
 class User(AbstractUser):
+    name = models.CharField(max_length=100, blank=True)
     groups = models.ManyToManyField(
         Group,
         related_name='gcpc_user_set',  # changed related_name

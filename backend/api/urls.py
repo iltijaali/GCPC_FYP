@@ -4,7 +4,7 @@ from .views import *  # Import all views
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'register', RegisterViewSet, basename='register')  # Fixed basename conflict
+router.register(r'register', RegisterViewSet, basename='register')
 router.register(r'products', ProductViewSet)
 router.register(r'cart', CartViewSet)
 router.register(r'cart-history', CartHistoryViewSet)  # Corrected to CartHistoryViewSet
@@ -13,4 +13,5 @@ router.register(r'notifications', NotificationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),  # Including the router URLs
+    path('login/', LoginView.as_view(), name='login'),  # Added login path
 ]

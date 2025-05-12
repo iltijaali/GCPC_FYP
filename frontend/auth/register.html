@@ -1,70 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo">Govt Commodities Price Calculator</div>
-        <ul class="nav-links">
-            <li><a href="../index.html">Home</a></li>
-            <li><a href="login.html">Login/Register</a></li>
-            <li><a href="../products/products.html">Products</a></li>
-            <li><a href="../cart.html">Cart</a></li>
-            <li><a href="../complaints.html">Complaints</a></li>
-            <li><a href="../history.html">History</a></li>
-        </ul>
-    </nav>
+  <nav class="navbar">
+    <div class="logo">Govt Commodities Price Calculator</div>
+    <ul class="nav-links">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="login.html">Login/Register</a></li>
+      <li><a href="../products/products.html">Products</a></li>
+      <li><a href="../cart.html">Cart</a></li>
+      <li><a href="../complaints.html">Complaints</a></li>
+      <li><a href="../history.html">History</a></li>
+    </ul>
+  </nav>
 
-    <div class="login-container">
-        <h2>Register</h2>
-        <form id="registerForm">
-            <div class="form-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" placeholder="Enter your full name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="Enter your email address" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter your password" required>
-            </div>
-            <button type="submit">Register</button>
-            <p>
-                Already registered? <a href="login.html">Login</a>
-            </p>
-        </form>
-    </div>
-    <script src="../script.js"></script>
-    <script src="../api.js"></script>
-    <script>
-        document.getElementById("registerForm").addEventListener("submit", function (event) {
-            event.preventDefault();
+  <div class="login-container">
+    <h2>Register</h2>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="fullname" placeholder="Enter your full name" required />
+      </div>
+      <div class="form-group">
+        <label for="name">User Name</label>
+        <input type="text" id="name" placeholder="Enter your user name" required />
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email address" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required />
+      </div>
+      <button type="submit">Register</button>
+      <p>
+        Already registered? <a href="login.html">Login</a>
+      </p>
+    </form>
+  </div>
 
-            const nameField = document.getElementById("name");
-            const emailField = document.getElementById("email");
-            const passwordField = document.getElementById("password");
+  <!-- Include script.js (optional) -->
+  <script src="../script.js"></script>
 
+  <!-- Use type="module" to import register() -->
+  <script type="module">
+    import { register } from '../api.js';
 
-            if (!nameField.value || !emailField.value || !passwordField.value) {
-                alert("All fields are required for registration!");
-                return;
-            }
+    document.getElementById("registerForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
 
-            userData[emailField.value] = {
-                name: nameField.value,
-                password: passwordField.value
-            };
-            const data = register(nameField.value, emailField.value, passwordField.value);
-            alert(`Registration successful! Please login.${data}`);
-            window.location.href = 'login.html';
-        });
-    </script>
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const fullname = document.getElementById("fullname").value;
+
+      if (!name || !email || !password || !fullname) {
+        alert("All fields are required for registration!");
+        return;
+      }
+
+      try {
+        await register(name, email, password, fullname);
+        alert("Registration successful! Please login.");
+        window.location.href = "login.html";
+      } catch (error) {
+        alert("Registration failed: " + error.message);
+        console.error("Registration error:", error);
+      }
+    });
+  </script>
 </body>
 </html>

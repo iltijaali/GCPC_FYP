@@ -1,8 +1,9 @@
-from rest_framework import viewsets, permissions, mixins
+from rest_framework import viewsets, permissions, mixins , status
 from .models import User, Product, Cart, CartHistory, Complaint, Notification
 from .serializers import *
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 class UserViewSet(mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
@@ -10,10 +11,25 @@ class UserViewSet(mixins.RetrieveModelMixin,
     serializer_class = UserSerializer
 
 
-class RegisterViewSet(viewsets.ModelViewSet):
+class RegisterViewSet(mixins.CreateModelMixin,
+                      viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]  # Anyone can access login
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            return Response({
+                'user_id': user.id,
+                'email': user.email
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductViewSet(viewsets.ModelViewSet):

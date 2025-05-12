@@ -14,11 +14,12 @@ function getUser(id) {
     console.log('GET request sent');
 }
 
-export function register(user, email, password) {
+export function register(user, email, password , fullname) {
     const requestBody = {
-      name: user,
+      username: user,
       email: email,
-      password: password
+      password: password,
+      full_name: fullname
     };
   
     return fetch('http://localhost:8000/api/register/', {
@@ -38,3 +39,25 @@ export function register(user, email, password) {
       });
   }
   
+export function login(email, password) {
+    const requestBody = {
+      email: email,
+      password: password
+    };
+  
+    return fetch('http://localhost:8000/api/login/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to login');
+        return response.json();
+      })
+      .then(data => {
+        console.log('Login successful:', data);
+        return data; // return for caller to use
+      });
+}

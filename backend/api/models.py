@@ -2,23 +2,15 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
 # Custom User Model
-class User(AbstractUser):
-    name = models.CharField(max_length=100, blank=True)
-    groups = models.ManyToManyField(
-        Group,
-        related_name='gcpc_user_set',  # changed related_name
-        blank=True,
-        help_text='The groups this user belongs to.',
-        verbose_name='groups',
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name='gcpc_user_permissions',  # changed related_name
-        blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='user permissions',
-    )
+class User(models.Model):
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=128)
+    full_name = models.CharField(max_length=255, blank=True, null=True)
 
+    def check_password(self, raw_password):
+        # Implement password check logic here
+        return self.password == raw_password
 # Product Model (for fruits, vegetables, etc.)
 class Product(models.Model):
     CATEGORY_CHOICES = [

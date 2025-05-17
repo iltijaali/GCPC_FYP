@@ -59,21 +59,20 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    product = ProductSerializer()
-
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     class Meta:
         model = Cart
-        fields = '__all__'
+        fields = ['id', 'user', 'created_at', 'cart_history', 'total_price']
 
 
 # CartHistorySerializer - Correcting from OrderHistorySerializer
 class CartHistorySerializer(serializers.ModelSerializer):
-    products = ProductSerializer(many=True, read_only=True)  # Make products read-only
+    carts = CartSerializer(many=True, read_only=True)  # Make products read-only
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = CartHistory
-        fields = ['user', 'products', 'total_price', 'date']
+        fields = ['user', 'carts', 'total_price', 'date']
 
 
 

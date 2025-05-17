@@ -35,9 +35,9 @@ class CartHistory(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Cart History for {self.user.username} on {self.date.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"Cart History {self.user.username}"
 
-    def get_products(self):
+    def get_carts(self):
         return self.carts.all()  # related_name from Cart model
 
 # Cart Model (1-to-many with products, connected to CartHistory)

@@ -41,6 +41,12 @@ class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
 
+class CartItemViewSet(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      viewsets.GenericViewSet):
+    queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
+
 
 class CartHistoryViewSet(viewsets.ModelViewSet):  # ✅ Renamed from OrderHistory
     queryset = CartHistory.objects.all()

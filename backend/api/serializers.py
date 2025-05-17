@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Product, Cart, CartHistory, Complaint, Notification  # Correct import
+from .models import User, Product, Cart, CartItem, CartHistory, Complaint, Notification  # Correct import
 from django.contrib.auth.password_validation import validate_password
 
 # for getting user information
@@ -57,22 +57,49 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
-
+#cart serializer
+class InlineCartItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    product = serializers.CharField(source='product.name')
+    quantity = serializers.IntegerField()
 class CartSerializer(serializers.ModelSerializer):
-    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    total_price = serializers.SerializerMethodField(read_only=True)
+    products = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'created_at', 'cart_history', 'total_price']
+        fields = ['id', 'user', 'created_at', 'products', 'cart_history', 'total_price']
+    def get_total_price(self, obj):
+        return obj.get_total_price()
+    def get_products(self, obj):
+        products = obj.items.all()
+        return InlineCartItemSerializer(products, many=True).data
+
+class InlineProductSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    category = serializers.CharField()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+class CartItemSerializer(serializers.ModelSerializer):
+    total_price = serializers.SerializerMethodField(read_only=True)
+    product_details = InlineProductSerializer(source='product', read_only=True)  # Use InlineProductSerializer for nested representation
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), write_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'cart', 'product', 'product_details', 'quantity', 'added_date', 'total_price']
+    def get_total_price(self, obj):
+        return obj.get_total_price()
 
 
 # CartHistorySerializer - Correcting from OrderHistorySerializer
 class CartHistorySerializer(serializers.ModelSerializer):
-    carts = CartSerializer(many=True, read_only=True)  # Make products read-only
-    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    carts = CartSerializer(many=True, read_only=True) 
 
     class Meta:
         model = CartHistory
-        fields = ['user', 'carts', 'total_price', 'date']
+        fields = ['user', 'carts', 'date']
+
 
 
 

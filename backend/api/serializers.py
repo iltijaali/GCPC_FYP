@@ -68,11 +68,13 @@ class CartSerializer(serializers.ModelSerializer):
 
 # CartHistorySerializer - Correcting from OrderHistorySerializer
 class CartHistorySerializer(serializers.ModelSerializer):
-    products = ProductSerializer(many=True)  # A cart history contains multiple products
+    products = ProductSerializer(many=True, read_only=True)  # Make products read-only
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = CartHistory
         fields = ['user', 'products', 'total_price', 'date']
+
 
 
 class ComplaintSerializer(serializers.ModelSerializer):

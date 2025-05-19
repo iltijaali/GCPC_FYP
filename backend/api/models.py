@@ -72,6 +72,7 @@ class Complaint(models.Model):
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     shop_name = models.CharField(max_length=100)
+    shopkeeper_name = models.CharField(max_length=100)
     location = models.CharField(max_length=255)
     description = models.TextField()
     photo = models.ImageField(upload_to='complaints/', blank=True, null=True)

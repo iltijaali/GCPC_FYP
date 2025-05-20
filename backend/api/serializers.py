@@ -2,32 +2,38 @@ from rest_framework import serializers
 from .models import User, Product, Cart, CartItem, CartHistory, Complaint, Notification  # Correct import
 from django.contrib.auth.password_validation import validate_password
 
+from django.db.models import Q
+
 # for getting user information
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'full_name']
 # login user serilizer
-class LoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(validators=[])
-    class Meta:
-        model = User
-        fields = ['email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+class UserLoginSerializer(serializers.Serializer):
+    username_or_email = serializers.CharField()
+    password = serializers.CharField()
 
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
+    def validate(self, data):
+        username_or_email = data.get("username_or_email")
+        password = data.get("password")
 
-        if email and password:
-            user = User.objects.filter(email=email).first()
-            if user and user.check_password(password):
-                attrs['user'] = user  # Include user in validated data
-                return attrs
-            else:
-                raise serializers.ValidationError("Invalid email or password")
-        else:
-            raise serializers.ValidationError("Email and password are required")
+        try:
+            user = User.objects.get(
+                Q(username=username_or_email) | Q(email=username_or_email)
+            )
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid credentials")
+
+        if not user.check_password(password):
+            raise serializers.ValidationError("Invalid credentials")
+
+        token = user.generate_token()
+        return {
+            "token": token,
+            "token_expiry": user.token_expiry,
+            "username": user.username,
+        }
 
 
 # for registering user

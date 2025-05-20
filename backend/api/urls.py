@@ -14,5 +14,5 @@ router.register(r'notifications', NotificationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),  # Including the router URLs
-    path('login/', LoginView.as_view(), name='login'),  # Added login path
+    path('login/', UserLoginView.as_view(), name='custom_login'),
 ]

@@ -1,4 +1,8 @@
+import base64
 from django.db import models
+import random
+import string
+from datetime import datetime, timedelta
 
 # Custom User Model
 class User(models.Model):
@@ -6,10 +10,34 @@ class User(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
     full_name = models.CharField(max_length=255, blank=True, null=True)
+    
+    # New fields for token and expiry
+    token = models.CharField(max_length=300, blank=True, null=True)
+    token_expiry = models.DateTimeField(blank=True, null=True)
 
     def check_password(self, raw_password):
-        # Implement password check logic here
+        # Implement proper hashing in production!
         return self.password == raw_password
+    
+    @property
+    def is_authenticated(self):
+        return True
+
+    def generate_token(self):
+        # Base64 encode the username (convert to bytes first)
+        username_bytes = self.username.encode('utf-8')
+        base64_bytes = base64.urlsafe_b64encode(username_bytes)
+        encrypted_username = base64_bytes.decode('utf-8')  # Convert bytes back to string
+
+        # Generate 14-char random string
+        random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=14))
+        
+        self.token = f"{encrypted_username}_{random_part}"
+        self.token_expiry = datetime.now() + timedelta(days=15)
+        self.save()
+        return self.token
+
+
     def __str__(self):
         return self.username
 # Product Model (for fruits, vegetables, etc.)

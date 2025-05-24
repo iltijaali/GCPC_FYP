@@ -7,6 +7,19 @@
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
+
+    <nav class="navbar">
+        <div class="logo">Govt Commodities Price Calculator</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="products.html">Products</a></li>
+            <li><a href="../cart.html">Cart</a></li>
+            <li><a href="../complaints.html">Complaints</a></li>
+            <li><a href="../history.html">History</a></li>
+            <li id="logout-nav-header"><Button id="logout-btn" onclick="logout()">Logout</Button></li>
+        </ul>
+    </nav>
+
     <section id="products-section">
         <h2>Explore Our Products</h2>
         <div id="category-navigation">
@@ -16,7 +29,8 @@
         <div id="product-list">
             </div>
     </section>
-    <script src="../script.js"></script>
+    <script src="../script.js" type="module" ></script>
+    <script src="../index.js" ></script>
     <style>
         #category-navigation {
             display: flex;

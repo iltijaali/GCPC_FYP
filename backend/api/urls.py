@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 from .views import *  # Import all views
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet)
 router.register(r'register', RegisterViewSet, basename='register')
 router.register(r'products', ProductViewSet)
 router.register(r'cart', CartViewSet)
@@ -15,4 +14,5 @@ router.register(r'notifications', NotificationViewSet)
 urlpatterns = [
     path('', include(router.urls)),  # Including the router URLs
     path('login/', UserLoginView.as_view(), name='custom_login'),
+    path('get-me/', UsergetView.as_view(), name='get_me'),
 ]

@@ -1,19 +1,4 @@
 
-function getUser(id) {
-    fetch(`http://localhost:8000/api/user/${id}`)
-    .then(response => {
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json(); // or response.text() if it's plain text
-    })
-    .then(data => {
-    console.log('GET response data:', data);
-    })
-    .catch(error => {
-    console.error('GET request failed:', error);
-    });
-    console.log('GET request sent');
-}
-
 export function register(user, email, password , fullname) {
     const requestBody = {
       username: user,
@@ -41,7 +26,7 @@ export function register(user, email, password , fullname) {
   
 export function login(email, password) {
     const requestBody = {
-      email: email,
+      username_or_email: email,
       password: password
     };
   
@@ -57,7 +42,34 @@ export function login(email, password) {
         return response.json();
       })
       .then(data => {
-        console.log('Login successful:', data);
+        localStorage.setItem("token", data.token);
         return data; // return for caller to use
       });
 }
+
+export function getUser(token) {
+  return fetch(`http://localhost:8000/api/get-me/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    // Don't log `response` directly — wait for json
+    return response.json();
+  })
+  .then(data => {
+    return data.username;
+  })
+  .catch(error => {
+    console.error('getUser failed:', error);
+    return null;
+  });
+}
+
+
+

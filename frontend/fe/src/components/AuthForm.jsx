@@ -71,7 +71,6 @@ const AuthForm = () => {
       try {
         setLoading(true);
         await login(formData.email, formData.password);
-        alert("Login successful!");
         window.location.href = "/"; // Redirect to home
       } catch (error) {
         alert("Login failed. Please check credentials.");
@@ -148,7 +147,7 @@ const AuthForm = () => {
               {isLogin ? "Email Address or Username" : "Email Address"}
             </label>
             <input
-              type="email"
+              type={isLogin? "text": "email"}
               name="email"
               id="email"
               value={formData.email}

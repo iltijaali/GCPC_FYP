@@ -8,8 +8,8 @@ router.register(r'products', ProductViewSet)
 router.register(r'cart', CartViewSet)
 router.register(r'cart-items', CartItemViewSet)  # Corrected to CartItemViewSet
 router.register(r'cart-history', CartHistoryViewSet)  # Corrected to CartHistoryViewSet
-router.register(r'complaints', ComplaintViewSet)
-router.register(r'notifications', NotificationViewSet)
+router.register(r'complaints', ComplaintViewSet, basename='complaints')  # Added basename for clarity
+router.register(r'notifications', NotificationViewSet, basename='notifications')  # Added basename for clarity`)
 
 urlpatterns = [
     path('', include(router.urls)),  # Including the router URLs

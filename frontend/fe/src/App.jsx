@@ -8,6 +8,7 @@ import ComplaintForm from './components/ComplaintForm';
 import Cart from './components/CartPage';
 import AuthForm from './components/AuthForm';
 import ProductBrowser from './components/ProductPage';
+import ProtectedRoute from './ProtectedRoute';
 // import other pages...
 
 function App() {
@@ -20,12 +21,12 @@ function App() {
         <Header />
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/history" element={<PurchaseHistory />} />
-            <Route path="/complaints" element={<ComplaintForm />} />
-            <Route path="/cart" element={<Cart />} />
+          <Route path="/" element={<Home />} />
             <Route path="/auth" element={<AuthForm />} />
-            <Route path="/products" element={<ProductBrowser />} />
+            <Route path="/products" element={<ProtectedRoute element={<ProductBrowser />} />} />
+            <Route path="/cart" element={<ProtectedRoute element={<Cart />} />} />
+            <Route path="/complaints" element={<ProtectedRoute element={<ComplaintForm />} />} />
+            <Route path="/history" element={<ProtectedRoute element={<PurchaseHistory />} />} />
             {/* Add other routes */}
           </Routes>
         </main>

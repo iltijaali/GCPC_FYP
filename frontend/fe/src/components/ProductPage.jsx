@@ -1,57 +1,34 @@
 import React, { useState } from "react";
 
-const mockData = {
-  fruits: [
-    {
-      name: "Apple",
-      price: "Rs. 120/kg",
-      description: "Fresh and juicy red apples from Kashmir.",
-      origin: "Kashmir",
-    },
-    {
-      name: "Banana",
-      price: "Rs. 60/dozen",
-      description: "Ripe bananas rich in potassium.",
-      origin: "Sindh",
-    },
-    {
-      name: "Mango",
-      price: "Rs. 150/kg",
-      description: "Sweet mangoes of the Sindhri variety.",
-      origin: "Multan",
-    },
-  ],
-  vegetables: [
-    {
-      name: "Potato",
-      price: "Rs. 40/kg",
-      description: "Versatile and fresh potatoes.",
-      origin: "Punjab",
-    },
-    {
-      name: "Tomato",
-      price: "Rs. 50/kg",
-      description: "Juicy red tomatoes ideal for curries.",
-      origin: "Lahore",
-    },
-    {
-      name: "Onion",
-      price: "Rs. 45/kg",
-      description: "Sharp and flavorful onions.",
-      origin: "Hyderabad",
-    },
-  ],
-};
-
 const ProductBrowser = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
   const [toast, setToast] = useState("");
+
+  const fetchProducts = async (category) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`http://localhost:8000/api/products/?category=${category}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `MyToken ${token}`,
+        },
+      });
+  
+      if (!response.ok) throw new Error("Failed to fetch products");
+  
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+  
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
-    setProducts(mockData[category]);
+    fetchProducts(category);
   };
 
   const handleBack = () => {
@@ -59,31 +36,51 @@ const ProductBrowser = () => {
     setProducts([]);
   };
 
-  const addToCart = (product) => {
-    setCart([...cart, product]);
-    setToast(`${product.name} added to cart`);
-
-    // Hide toast after 2 seconds
-    setTimeout(() => setToast(""), 2000);
+  const addToCart = async (product) => {
+    const token = localStorage.getItem("token");
+    console.log(token);
+  
+    try {
+      const response = await fetch("http://localhost:8000/api/cart-items/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `MyToken ${token}`,
+        },
+        body: JSON.stringify({
+          product: product.id,
+        }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to add product to cart");
+  
+      const data = await response.json();
+      console.log("Cart item updated or created:", data);
+      setToast(`Added ${product.name} to cart!`);
+      setTimeout(() => setToast(""), 3000);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      setToast("Failed to add product");
+      setTimeout(() => setToast(""), 3000);
+    }
   };
+  
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center p-6 text-white"
-    >
+    <div className="min-h-screen bg-cover bg-center p-6 text-white">
       <section className="mt-12 bg-white bg-opacity-90 text-black p-6 rounded shadow-lg max-w-4xl mx-auto">
         {!selectedCategory ? (
           <>
             <h2 className="text-3xl font-bold text-center mb-6">Explore Our Products</h2>
             <div className="flex justify-center gap-8">
               <button
-                onClick={() => handleCategoryClick("fruits")}
+                onClick={() => handleCategoryClick("Fruit")}
                 className="px-6 py-3 bg-blue-800 text-white font-semibold rounded hover:bg-blue-700"
               >
                 Fruits
               </button>
               <button
-                onClick={() => handleCategoryClick("vegetables")}
+                onClick={() => handleCategoryClick("Vegetable")}
                 className="px-6 py-3 bg-green-800 text-white font-semibold rounded hover:bg-green-700"
               >
                 Vegetables
@@ -93,9 +90,7 @@ const ProductBrowser = () => {
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
-                {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-              </h2>
+              <h2 className="text-2xl font-bold">{selectedCategory}s</h2>
               <button
                 onClick={handleBack}
                 className="text-sm underline text-blue-600 hover:text-blue-800"
@@ -110,11 +105,8 @@ const ProductBrowser = () => {
                   className="bg-white border p-5 rounded shadow hover:shadow-lg transition"
                 >
                   <h3 className="font-bold text-xl">{item.name}</h3>
-                  <p className="text-gray-800 mb-1">{item.price}</p>
+                  <p className="text-gray-800 mb-1">Rs. {item.price}</p>
                   <p className="text-gray-600 text-sm">{item.description}</p>
-                  <p className="text-gray-500 text-xs italic mt-1">
-                    Origin: {item.origin}
-                  </p>
                   <button
                     onClick={() => addToCart(item)}
                     className="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

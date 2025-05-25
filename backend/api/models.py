@@ -71,6 +71,7 @@ class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     cart_history = models.ForeignKey('CartHistory', related_name='carts', on_delete=models.CASCADE, null=True, blank=True)
+    saved = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Cart #{self.id} - {self.user.username}"
@@ -109,6 +110,17 @@ class Complaint(models.Model):
 
     def __str__(self):
         return f"Complaint by {self.user.username} - {self.status}"
+
+    def save(self, *args, **kwargs):
+        is_update = self.pk is not None
+        if is_update:
+            previous = Complaint.objects.get(pk=self.pk)
+            if previous.status != self.status:
+                Notification.objects.create(
+                    recipient=self.user,
+                    message=f"Your complaint status has been updated to '{self.status}'"
+                )
+        super().save(*args, **kwargs)
 
 # Notification Model
 class Notification(models.Model):

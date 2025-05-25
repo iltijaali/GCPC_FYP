@@ -61,13 +61,18 @@ class RegisterSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ['id', 'name', 'category', 'price', 'date_updated']
 
 #cart serializer
 class InlineCartItemSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     product = serializers.CharField(source='product.name')
     quantity = serializers.IntegerField()
+    total_price = serializers.SerializerMethodField()
+
+    def get_total_price(self, obj):
+        return obj.get_total_price()  # Assuming your CartItem model has this method
+    
 class CartSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField(read_only=True)
     products = serializers.SerializerMethodField(read_only=True)
@@ -113,6 +118,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
     class Meta:
         model = Complaint
         fields = '__all__'
+        read_only_fields = ['user']
 
 
 class NotificationSerializer(serializers.ModelSerializer):

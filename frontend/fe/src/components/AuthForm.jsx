@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -182,6 +183,17 @@ const AuthForm = () => {
             {loading ? (isLogin ? "Logging in..." : "Registering...") : isLogin ? "Login" : "Register"}
           </button>
         </form>
+
+        <div className="text-right mt-1">
+          {isLogin && (
+            <Link
+              to="/forgot-password"
+              className="text-sm text-yellow-400 hover:underline hover:text-yellow-300"
+            >
+              Forgot Password?
+            </Link>
+          )}
+        </div>
 
         <p className="mt-6 text-center text-indigo-800 font-semibold">
           {isLogin ? "New here?" : "Already registered?"}{" "}

@@ -10,6 +10,7 @@ class User(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
     full_name = models.CharField(max_length=255, blank=True, null=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
     
     # New fields for token and expiry
     token = models.CharField(max_length=300, blank=True, null=True)

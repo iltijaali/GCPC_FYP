@@ -102,7 +102,7 @@ const Cart = () => {
                         />
 
                         <span className="text-sm text-gray-700 font-medium">
-                        ${item.total_price?.toFixed(2)}
+                        {item.total_price?.toFixed(2)}Rs
                         </span>
 
                         <AiOutlineDelete
@@ -115,7 +115,7 @@ const Cart = () => {
                 </ul>
 
             <div className="mt-6 text-center text-2xl font-extrabold text-yellow-500 drop-shadow-lg">
-              Total: ${cart.total_price.toFixed(2)}
+              Total: {cart.total_price.toFixed(2)}Rs
             </div>
 
             <button

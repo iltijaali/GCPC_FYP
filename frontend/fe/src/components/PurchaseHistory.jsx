@@ -52,7 +52,7 @@ const PurchaseHistory = () => {
                   Date: {new Date(cart.created_at).toLocaleDateString()}
                 </span>
                 <span className="text-yellow-600 font-bold">
-                  Total: ${cart.total_price.toFixed(2)}
+                  Total: {cart.total_price.toFixed(2)}Rs
                 </span>
               </div>
             ))
@@ -73,7 +73,7 @@ const PurchaseHistory = () => {
               <li key={item.id} className="flex justify-between mb-2">
                 <span>{item.product}</span>
                 <span>Qty: {item.quantity}</span>
-                <span>${item.total_price.toFixed(2)}</span>
+                <span>{item.total_price.toFixed(2)}Rs</span>
               </li>
             ))}
           </ul>

@@ -238,7 +238,7 @@ const ComplaintsForm = () => {
         <div>
           <label className="block text-gray-700">Select Location on Map:</label>
           <MapContainer
-            center={[31.7131, 73.9783]} // Centered at Sheikhupura
+            center={[30.0442, 72.3441]} // Centered at Sheikhupura
             zoom={13}
             style={{ height: "300px", width: "100%" }}
           >

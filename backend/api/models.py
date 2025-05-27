@@ -102,11 +102,14 @@ class Complaint(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     shop_name = models.CharField(max_length=100)
     shopkeeper_name = models.CharField(max_length=100)
+    dc_email = models.EmailField()
     location = models.CharField(max_length=255)
     description = models.TextField()
     photo = models.ImageField(upload_to='complaints/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     submitted_date = models.DateTimeField(auto_now_add=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return f"Complaint by {self.user.username} - {self.status}"

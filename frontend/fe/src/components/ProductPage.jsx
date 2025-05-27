@@ -4,6 +4,7 @@ const ProductBrowser = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);
   const [toast, setToast] = useState("");
+  const [currentDate] = useState(() => new Date());
 
   const fetchProducts = async (category) => {
     const token = localStorage.getItem("token");
@@ -15,16 +16,15 @@ const ProductBrowser = () => {
           Authorization: `MyToken ${token}`,
         },
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch products");
-  
+
       const data = await response.json();
       setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
   };
-  
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
@@ -39,7 +39,7 @@ const ProductBrowser = () => {
   const addToCart = async (product) => {
     const token = localStorage.getItem("token");
     console.log(token);
-  
+
     try {
       const response = await fetch("http://localhost:8000/api/cart-items/", {
         method: "POST",
@@ -51,9 +51,9 @@ const ProductBrowser = () => {
           product: product.id,
         }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to add product to cart");
-  
+
       const data = await response.json();
       console.log("Cart item updated or created:", data);
       setToast(`Added ${product.name} to cart!`);
@@ -64,11 +64,13 @@ const ProductBrowser = () => {
       setTimeout(() => setToast(""), 3000);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-cover bg-center p-6 text-white">
       <section className="mt-12 bg-white bg-opacity-90 text-black p-6 rounded shadow-lg max-w-4xl mx-auto">
+        <div className="text-right text-sm text-gray-600 mb-2">
+          Updated on: {currentDate.toLocaleDateString()}
+        </div>
         {!selectedCategory ? (
           <>
             <h2 className="text-3xl font-bold text-center mb-6">Explore Our Products</h2>

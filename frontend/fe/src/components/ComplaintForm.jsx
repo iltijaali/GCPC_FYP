@@ -1,13 +1,44 @@
 import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { FaUpload } from "react-icons/fa";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const LocationMarker = ({ setCoordinates }) => {
+  const [position, setPosition] = useState(null);
+
+  useMapEvents({
+    click(e) {
+      setPosition(e.latlng);
+      setCoordinates(e.latlng);
+    },
+  });
+
+  return position === null ? null : (
+    <Marker position={position}></Marker>
+  );
+};
 
 const ComplaintsForm = () => {
   const [complaints, setComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [dcEmail, setDcEmail] = useState("");
   const [shopName, setShopName] = useState("");
   const [shopkeeperName, setShopkeeperName] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState(null);
+  const [coordinates, setCoordinates] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const TOKEN = localStorage.getItem("token");
 
@@ -35,9 +66,14 @@ const ComplaintsForm = () => {
     const formData = new FormData();
     formData.append("shop_name", shopName);
     formData.append("shopkeeper_name", shopkeeperName);
+    formData.append("dc_email", dcEmail);
     formData.append("location", location);
     formData.append("description", description);
     if (photo) formData.append("photo", photo);
+    if (coordinates) {
+      formData.append("latitude", coordinates.lat);
+      formData.append("longitude", coordinates.lng);
+    }
 
     fetch("http://localhost:8000/api/complaints/", {
       method: "POST",
@@ -54,9 +90,11 @@ const ComplaintsForm = () => {
         setComplaints((prev) => [...prev, data]);
         setShopName("");
         setShopkeeperName("");
+        setDcEmail("");
         setLocation("");
         setDescription("");
         setPhoto(null);
+        setCoordinates(null);
         alert("Complaint submitted!");
       })
       .catch((err) => {
@@ -101,6 +139,9 @@ const ComplaintsForm = () => {
                 <div className="mt-2 p-4 bg-blue-100 rounded shadow-inner">
                   <p>
                     <strong>Shopkeeper:</strong> {complaint.shopkeeper_name}
+                  </p>
+                  <p>
+                    <strong>DC Email:</strong> {complaint.dc_email}
                   </p>
                   <p>
                     <strong>Location:</strong> {complaint.location}
@@ -148,6 +189,16 @@ const ComplaintsForm = () => {
           required
           className="w-full p-2 border rounded"
         />
+
+        <input
+          type="email"
+          placeholder="DC Email"
+          value={dcEmail}
+          onChange={(e) => setDcEmail(e.target.value)}
+          required
+          className="w-full p-2 border rounded"
+        />
+
         <input
           type="text"
           placeholder="Location"
@@ -156,6 +207,7 @@ const ComplaintsForm = () => {
           required
           className="w-full p-2 border rounded"
         />
+
         <textarea
           placeholder="Description"
           value={description}
@@ -164,12 +216,39 @@ const ComplaintsForm = () => {
           className="w-full p-2 border rounded"
           rows={4}
         />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setPhoto(e.target.files[0])}
-          className="w-full p-2"
-        />
+
+        <div className="flex items-center space-x-2">
+          <label
+            htmlFor="file-upload"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700"
+          >
+            <FaUpload className="mr-2" />
+            Upload Photo
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setPhoto(e.target.files[0])}
+            className="hidden"
+          />
+        </div>
+
+        {/* Map for selecting location */}
+        <div>
+          <label className="block text-gray-700">Select Location on Map:</label>
+          <MapContainer
+            center={[31.7131, 73.9783]} // Centered at Sheikhupura
+            zoom={13}
+            style={{ height: "300px", width: "100%" }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <LocationMarker setCoordinates={setCoordinates} />
+          </MapContainer>
+        </div>
 
         <button
           type="submit"

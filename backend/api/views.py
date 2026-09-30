@@ -1,11 +1,14 @@
 from rest_framework import viewsets, permissions, mixins , status
-from .models import User, Product, Cart, CartHistory, Complaint, Notification
+from .models import User, Product, Cart, CartItem, CartHistory, Complaint, Notification
 from .serializers import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
+from rest_framework.throttling import ScopedRateThrottle
+from django.db import transaction
 
 from .authentication import CustomTokenAuthentication
+from .complaintmail import notify_dc_in_background
 
 
 
@@ -16,6 +19,9 @@ class RegisterViewSet(mixins.CreateModelMixin,
     permission_classes = [permissions.AllowAny]
 
 class UserLoginView(APIView):
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
+
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -35,7 +41,8 @@ class UsergetView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    # Prices are managed by administrators through the Django admin, not through the API.
     authentication_classes = [CustomTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -75,6 +82,9 @@ class CartItemViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CustomTokenAuthentication]
 
+    def get_queryset(self):
+        return CartItem.objects.filter(cart__user=self.request.user)
+
     def create(self, request, *args, **kwargs):
         user = request.user
 
@@ -86,6 +96,12 @@ class CartItemViewSet(viewsets.ModelViewSet):
         product_id = request.data.get('product')
         if not product_id:
             return Response({"error": "Product ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            product_exists = Product.objects.filter(pk=int(product_id)).exists()
+        except (TypeError, ValueError):
+            product_exists = False
+        if not product_exists:
+            return Response({"error": "That product does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if this item already exists in the cart
         cart_item, created = CartItem.objects.get_or_create(
@@ -122,8 +138,16 @@ class ComplaintViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Complaint.objects.filter(user=self.request.user)
 
+    def get_throttles(self):
+        # Creating a complaint sends an email to an address the user typed, so limit how often it can be done.
+        if self.action == 'create':
+            self.throttle_scope = 'complaint'
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        complaint = serializer.save(user=self.request.user)
+        transaction.on_commit(lambda: notify_dc_in_background(complaint.pk))
 
 
 
@@ -141,6 +165,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 class RequestPasswordResetEmailView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'otp'
 
     def post(self, request):
         serializer = RequestPasswordResetEmailSerializer(data=request.data)
@@ -151,6 +177,8 @@ class RequestPasswordResetEmailView(APIView):
     
 class VerifyOTPView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'otp'
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         if serializer.is_valid():
@@ -160,6 +188,8 @@ class VerifyOTPView(APIView):
     
 class ResetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'otp'
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)

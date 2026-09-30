@@ -1,6 +1,5 @@
-import random
 from rest_framework import serializers
-from .models import User, Product, Cart, CartItem, CartHistory, Complaint, Notification  # Correct import
+from .models import User, Product, Cart, CartItem, CartHistory, Complaint, Notification, OTPError
 
 from .otpsender import send_otp_email
 
@@ -47,12 +46,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['full_name','username', 'email',  'password']
 
     def create(self, validated_data):
-        user = User.objects.create(
-            username=validated_data['username'],  
-            full_name=validated_data['full_name'],
+        user = User(
+            username=validated_data['username'],
+            full_name=validated_data.get('full_name'),
             email=validated_data['email'],
-            password=validated_data['password']
         )
+        user.set_password(validated_data['password'])
+        user.save()
         return user
     # you can validate the data here
     def validate(self, data):
@@ -101,6 +101,8 @@ class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['id', 'cart', 'product', 'product_details', 'quantity', 'added_date', 'total_price']
+        read_only_fields = ['cart']
+        extra_kwargs = {'quantity': {'min_value': 1}}
     def get_total_price(self, obj):
         return obj.get_total_price()
 
@@ -120,7 +122,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
     class Meta:
         model = Complaint
         fields = '__all__'
-        read_only_fields = ['user']
+        read_only_fields = ['user', 'status', 'dc_notified_at']
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -133,67 +135,62 @@ class RequestPasswordResetEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
+        user = User.objects.filter(email=value).first()
+        if not user:
             raise serializers.ValidationError("No user is associated with this email.")
+        wait = user.seconds_until_new_otp_allowed()
+        if wait:
+            raise serializers.ValidationError(
+                f"An OTP was sent recently. Please wait {wait} seconds before requesting another."
+            )
         return value
 
     def create(self, validated_data):
         email = validated_data['email']
-        print(email)
         user = User.objects.get(email=email)
-        otp = random.randint(100000, 999999)
-        user.otp = otp
-        print(otp)
-        user.save()
+        otp = user.issue_otp()
         send_otp_email(otp, email, user.full_name)
         return validated_data
-    
-class VerifyOTPSerializer(serializers.Serializer):
+
+
+class _OTPCheckMixin:
+    """Shared by verify and reset: look the user up and check the OTP, counting wrong attempts."""
+
+    def _check(self, data):
+        user = User.objects.filter(email=data.get('email')).first()
+        if not user:
+            raise serializers.ValidationError("No user is associated with this email.")
+        try:
+            user.verify_otp(data.get('otp', ''))
+        except OTPError as exc:
+            raise serializers.ValidationError(str(exc))
+        return user
+
+
+class VerifyOTPSerializer(_OTPCheckMixin, serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField()
 
     def validate(self, data):
-        email = data.get('email')
-        otp = data.get('otp')
-
-        user = User.objects.filter(email=email).first()
-        if not user:
-            raise serializers.ValidationError("No user is associated with this email.")
-
-        if str(user.otp) != str(otp):
-            raise serializers.ValidationError("Invalid OTP.")
-
+        self._check(data)
         return data
 
     def create(self, validated_data):
-        email = validated_data['email']
-        user = User.objects.get(email=email)
         return validated_data
-    
 
-class ResetPasswordSerializer(serializers.Serializer):
+
+class ResetPasswordSerializer(_OTPCheckMixin, serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField()
     new_password = serializers.CharField(write_only=True, min_length=3)
 
     def validate(self, data):
-        email = data.get('email')
-        otp = data.get('otp')
-        user = User.objects.filter(email=email).first()
-
-        if not user:
-            raise serializers.ValidationError("No user is associated with this email.")
-
-        if str(user.otp) != str(otp):
-            raise serializers.ValidationError("Invalid OTP.")
-
+        self._check(data)
         return data
 
     def create(self, validated_data):
-        email = validated_data['email']
-        new_password = validated_data['new_password']
-        user = User.objects.get(email=email)
-        user.password = new_password
-        user.otp = None  # clear OTP after successful password reset
-        user.save()
+        user = User.objects.get(email=validated_data['email'])
+        user.set_password(validated_data['new_password'])
+        user.save(update_fields=['password'])
+        user.clear_otp()  # an OTP works once
         return validated_data

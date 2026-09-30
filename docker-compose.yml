@@ -1,0 +1,87 @@
+# Whole project in one command:  cp .env.example .env  &&  docker compose up --build
+name: gcpc
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gcpc_db}
+      POSTGRES_USER: ${POSTGRES_USER:-gcpc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Copy .env.example to .env and set DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:${FRONTEND_PORT:-8080},http://127.0.0.1:${FRONTEND_PORT:-8080},http://localhost:${LEGACY_PORT:-5500},http://127.0.0.1:${LEGACY_PORT:-5500}}
+      SERVE_MEDIA: "True"
+      DB_NAME: ${POSTGRES_DB:-gcpc_db}
+      DB_USER: ${POSTGRES_USER:-gcpc}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: db
+      DB_PORT: "5432"
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-smtp.gmail.com}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-587}
+      EMAIL_USE_STARTTLS: ${EMAIL_USE_STARTTLS:-True}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - media:/app/media
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/admin/login/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend/fe
+      args:
+        # The browser (not the container) calls the API, so this must be an address the browser can reach
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:${BACKEND_PORT:-8000}}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+  # The older plain-HTML frontend (frontend/hello). Not started by default:
+  #   docker compose --profile legacy up --build
+  legacy-frontend:
+    profiles: ["legacy"]
+    build:
+      context: ./frontend/hello
+      args:
+        API_URL: ${VITE_API_URL:-http://localhost:${BACKEND_PORT:-8000}}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${LEGACY_PORT:-5500}:80"
+
+volumes:
+  pgdata:
+  media:

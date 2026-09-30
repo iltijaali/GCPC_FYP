@@ -1,91 +1,95 @@
-import React, { useState } from "react";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../api';
+import { useToast } from '../context/useToast';
+
+const MIN_PASSWORD = 6;
+const INPUT =
+  'w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+const BUTTON =
+  'w-full bg-indigo-900 text-white py-3 rounded font-bold hover:bg-yellow-400 hover:text-indigo-900 transition-colors duration-300 disabled:opacity-60';
 
 const ForgotPasswordPage = () => {
+  const toast = useToast();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: email, 2: otp, 3: new password
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleEmailSubmit = async (e) => {
+  const run = (action) => async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Send OTP to email
-      const res = await fetch("http://localhost:8000/api/request-reset-password/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error("Failed to send OTP");
-      setStep(2);
+      await action();
     } catch (err) {
-      alert("Failed to send OTP. Try again.");
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
+  const handleEmailSubmit = run(async () => {
+    await api.post('/request-reset-password/', { email: email.trim() }, { auth: false });
+    toast.success('We sent a 6-digit code to your email.');
+    setStep(2);
+  });
+
+  const handleResend = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/verify-otp/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
-      });
-      if (!res.ok) throw new Error("Invalid OTP");
-      setStep(3);
+      await api.post('/request-reset-password/', { email: email.trim() }, { auth: false });
+      setOtp('');
+      toast.success('We sent you a new code.');
     } catch (err) {
-      alert("OTP verification failed.");
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:8000/api/reset-password/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, new_password: newPassword }),
-      });
-      if (!res.ok) throw new Error("Failed to reset password");
-      alert("Password reset successfully. You may now log in.");
-      window.location.href = "/login"; // or redirect to AuthForm
-    } catch (err) {
-      alert("Failed to reset password.");
-    } finally {
-      setLoading(false);
+  const handleOtpSubmit = run(async () => {
+    await api.post('/verify-otp/', { email: email.trim(), otp: otp.trim() }, { auth: false });
+    setStep(3);
+  });
+
+  const handleResetPassword = run(async () => {
+    if (newPassword.length < MIN_PASSWORD) {
+      toast.error(`Password must be at least ${MIN_PASSWORD} characters.`);
+      return;
     }
-  };
+    await api.post(
+      '/reset-password/',
+      { email: email.trim(), otp: otp.trim(), new_password: newPassword },
+      { auth: false },
+    );
+    toast.success('Password reset successfully. You can now log in.');
+    navigate('/auth');
+  });
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-[70vh] flex items-center justify-center p-6">
       <div className="bg-white bg-opacity-90 backdrop-blur-md rounded-xl shadow-lg max-w-md w-full p-8 text-indigo-900">
-        <h2 className="text-2xl font-bold text-center mb-6">Reset Password</h2>
+        <h2 className="text-2xl font-bold text-center mb-2">Reset Password</h2>
+        <p className="text-center text-sm text-indigo-700 mb-6">Step {step} of 3</p>
 
         {step === 1 && (
           <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div>
-              <label className="block font-semibold mb-1">Email Address</label>
+              <label htmlFor="reset-email" className="block font-semibold mb-1">Email Address</label>
               <input
+                id="reset-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={INPUT}
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-900 text-white py-3 rounded font-bold hover:bg-yellow-400 hover:text-indigo-900 transition-colors duration-300"
-            >
-              {loading ? "Sending OTP..." : "Send OTP"}
+            <button type="submit" disabled={loading} className={BUTTON}>
+              {loading ? 'Sending OTP...' : 'Send OTP'}
             </button>
           </form>
         )}
@@ -93,46 +97,59 @@ const ForgotPasswordPage = () => {
         {step === 2 && (
           <form onSubmit={handleOtpSubmit} className="space-y-4">
             <div>
-              <label className="block font-semibold mb-1">OTP</label>
+              <label htmlFor="reset-otp" className="block font-semibold mb-1">OTP sent to {email}</label>
               <input
+                id="reset-otp"
                 type="text"
+                inputMode="numeric"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
+                autoComplete="one-time-code"
                 required
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={INPUT}
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-900 text-white py-3 rounded font-bold hover:bg-yellow-400 hover:text-indigo-900 transition-colors duration-300"
-            >
-              {loading ? "Verifying..." : "Verify OTP"}
+            <button type="submit" disabled={loading} className={BUTTON}>
+              {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
+            <p className="text-center text-sm">
+              The code is valid for 10 minutes.{' '}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={loading}
+                className="text-indigo-700 underline hover:text-indigo-900 disabled:opacity-60"
+              >
+                Send a new code
+              </button>
+            </p>
           </form>
         )}
 
         {step === 3 && (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
-              <label className="block font-semibold mb-1">New Password</label>
+              <label htmlFor="reset-password" className="block font-semibold mb-1">New Password</label>
               <input
+                id="reset-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={`At least ${MIN_PASSWORD} characters`}
+                autoComplete="new-password"
                 required
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={INPUT}
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-900 text-white py-3 rounded font-bold hover:bg-yellow-400 hover:text-indigo-900 transition-colors duration-300"
-            >
-              {loading ? "Resetting..." : "Reset Password"}
+            <button type="submit" disabled={loading} className={BUTTON}>
+              {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
         )}
+
+        <p className="mt-6 text-center text-sm">
+          <Link to="/auth" className="text-indigo-700 underline hover:text-indigo-900">Back to login</Link>
+        </p>
       </div>
     </div>
   );

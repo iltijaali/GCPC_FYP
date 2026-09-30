@@ -1,51 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { FaUserCircle } from "react-icons/fa";
+import { NavLink, useNavigate } from 'react-router-dom';
+import { FaUserCircle } from 'react-icons/fa';
 
-import NotificationDropdown from "./components/NotificationDropdown";
+import NotificationDropdown from './components/NotificationDropdown';
+import { useAuth } from './context/useAuth';
+
+const linkClass = ({ isActive }) =>
+  `pb-0.5 border-b-2 transition duration-200 hover:text-yellow-300 ${
+    isActive ? 'border-yellow-300 text-yellow-300' : 'border-transparent'
+  }`;
 
 const Header = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch("http://localhost:8000/api/get-me/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token }),
-        });
-
-        if (!response.ok) throw new Error("Unauthorized");
-
-        const data = await response.json();
-        setUser(data);
-      } catch (err) {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/auth";
+    logout();
+    navigate('/auth');
   };
-
-  if (loading) return null;
 
   return (
     <header className="bg-gradient-to-r from-blue-900 to-indigo-800 shadow-md p-4">
@@ -55,22 +26,23 @@ const Header = () => {
           <span className="text-yellow-300 ml-1">Price Calculator</span>
         </div>
 
-        <nav className="flex items-center gap-4 mt-3 md:mt-0 text-sm md:text-base text-white">
-          <a href="/" className="hover:text-yellow-300 transition duration-200">Home</a>
+        <nav
+          className="flex items-center flex-wrap gap-4 mt-3 md:mt-0 text-sm md:text-base text-white"
+          aria-label="Main"
+        >
+          <NavLink to="/" end className={linkClass}>Home</NavLink>
 
-          {!user ? (
+          {!loading && !user && <NavLink to="/auth" className={linkClass}>Login/Signup</NavLink>}
+
+          {user && (
             <>
-              <a href="/auth" className="hover:text-yellow-300 transition duration-200">Login/Signup</a>
-            </>
-          ) : (
-            <>
-              <a href="/products" className="hover:text-yellow-300 transition duration-200">Products</a>
-              <a href="/cart" className="hover:text-yellow-300 transition duration-200">Cart</a>
-              <a href="/complaints" className="hover:text-yellow-300 transition duration-200">Complaints</a>
-              <a href="/history" className="hover:text-yellow-300 transition duration-200">History</a>
+              <NavLink to="/products" className={linkClass}>Products</NavLink>
+              <NavLink to="/cart" className={linkClass}>Cart</NavLink>
+              <NavLink to="/complaints" className={linkClass}>Complaints</NavLink>
+              <NavLink to="/history" className={linkClass}>History</NavLink>
 
               <div className="flex items-center gap-2 text-yellow-300 font-medium">
-                <FaUserCircle className="text-xl" />
+                <FaUserCircle className="text-xl" aria-hidden="true" />
                 Hi, {user.username}
               </div>
 

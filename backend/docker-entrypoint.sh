@@ -13,4 +13,9 @@ if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] &&
     python manage.py createsuperuser --noinput 2>&1 | grep -v "already taken" || true
 fi
 
+if [ -n "$APP_ADMIN_USERNAME" ] && [ -n "$APP_ADMIN_EMAIL" ] && [ -n "$APP_ADMIN_PASSWORD" ]; then
+    # the dashboard admin (the Django superuser above only opens /admin/ on the API)
+    python manage.py create_app_admin
+fi
+
 exec "$@"

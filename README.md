@@ -12,7 +12,8 @@ The repository contains a Django REST API and two separate frontends.
 - **Purchase history**: every saved cart appears as an order with its items, quantities, total and date.
 - **Complaints**: submit a complaint with shop name, shopkeeper name, DC email, location text, description, an optional photo, and a pinned map location (latitude/longitude). The complaint is **emailed to the DC** (with the photo attached and a map link; replying goes to the person who reported it), and its page shows whether the email was delivered. Users can review their past complaints and their status (`Pending`, `In Progress`, `Resolved`); only administrators can change the status.
 - **Notifications**: when a complaint's status changes, the owner gets a notification, shown in a bell dropdown in the header and markable as read.
-- **Django admin**: prices, complaints and all other models are managed through `/admin/`.
+- **Admin dashboard** (`/admin` in the app, for users with the admin role): KPIs with trends, charts, a complaint map, and pages to review and update complaints, edit prices, browse orders and manage who is an admin. See [Admin dashboard](#admin-dashboard).
+- **Django admin**: the raw database models are also available through the API server's `/admin/`.
 
 ## Repository layout
 
@@ -30,6 +31,7 @@ The repository contains a Django REST API and two separate frontends.
 │   └── media/complaints/   Uploaded complaint photos
 ├── frontend/
 │   ├── fe/                 Main frontend: React 19 + Vite + Tailwind CSS 4 (Dockerfile, nginx.conf)
+│   │   └── src/admin/      The admin dashboard (lazy-loaded; its own layout, charts and pages)
 │   └── hello/              Earlier frontend: plain HTML/CSS/JS pages (see note below; has a Dockerfile)
 └── gcpc_fyp                Empty folder recorded as a git submodule-style
                             entry with no .gitmodules; it has no content
@@ -87,6 +89,21 @@ Login does not use JWT, even though `rest_framework_simplejwt` is installed and 
 
 Uploaded photos are served from `/media/` in development.
 
+### Dashboard API (admins only, all under `/api/dashboard/`)
+
+Every endpoint needs a logged-in user whose `is_admin` flag is set; anyone else gets `403 Administrator access required.`
+
+| Endpoint | Method(s) | Purpose |
+| --- | --- | --- |
+| `stats/?days=7\|30\|90` | GET | KPIs with change vs the previous period, daily series, status mix, DC-email delivery, top products, recent complaints and map pins |
+| `complaints/` | GET | All complaints, paginated; filters `status`, `emailed`, `days`, `search` (shop, shopkeeper, location, description, reporter name, username or email); `ordering`; `page`, `page_size` |
+| `complaints/<id>/` | GET, PATCH | Read one; PATCH accepts only `status` and notifies the reporter |
+| `complaints/<id>/resend-email/` | POST | Send the complaint to the DC again (502 with a message if email is not configured) |
+| `complaints/export/` | GET | CSV of the current filter (spreadsheet formulas in user text are neutralised) |
+| `products/` | GET, POST, PATCH, DELETE | Price list management. Prices must be above zero, names are unique per category, and a product that appears in saved orders cannot be deleted (409) |
+| `orders/` | GET | Saved carts with their lines and totals; filters `search`, `days`, `ordering` |
+| `users/` | GET, PATCH | Users with their complaint and order counts; PATCH accepts only `is_admin` and refuses to change your own role |
+
 ### Frontend routes ([frontend/fe/src/App.jsx](frontend/fe/src/App.jsx))
 
 | Route | Page | Login required |
@@ -98,10 +115,45 @@ Uploaded photos are served from `/media/` in development.
 | `/cart` | Edit quantities, remove items, save cart | Yes |
 | `/history` | Saved orders and their details | Yes |
 | `/complaints` | Complaint history plus the new-complaint form with map | Yes |
+| `/admin`, `/admin/complaints`, `/admin/products`, `/admin/orders`, `/admin/users` | The admin dashboard | Admin role |
 
 ### The `frontend/hello` folder
 
 A first version of the UI written as plain HTML pages (`index.html`, `cart.html`, `complaints.html`, `history.html`, `auth/`, `products/`) with `api.js`, `script.js` and `index.js`. It is less complete than `frontend/fe`: `products/products.html` links to `fruits.html` and `vegetables.html`, but the file in the repo is named `vegitables.html`; the complaints page loads Google Maps with a placeholder `YOUR_API_KEY`. The login and register pages, the home page and the complaints page load without errors. The cart, history, fruits and vegetables pages are unfinished: they call `updateCartDisplay()`, `loadHistory()` and `showProducts()`, which are not defined anywhere, so they show nothing. The React app in `frontend/fe` has all of these features. Use `frontend/fe` as the working frontend.
+
+## Admin dashboard
+
+Log in on the normal login page with an admin account and open **/admin** (admins also get an "Admin" link in the header). People without the role see an "Administrators only" page, and the API refuses them as well.
+
+| Page | What you can do |
+| --- | --- |
+| **Overview** | Headline numbers (open complaints, complaints, resolution rate, orders, order value, users, products) with change versus the previous period; complaints per day by status; status mix and DC-email delivery; orders and order value per day; top products; a map of complaint locations; the latest complaints. One date-range control (7, 30 or 90 days) scopes everything on the page and is kept in the URL (`?days=7`). |
+| **Complaints** | Search, filter by status, DC email and period, sort and page. Open a complaint to see the reporter, description, photo and map pin, change its status (the reporter gets a notification), and send the email to the DC again. Export the current filter as CSV. |
+| **Products** | Add, edit and delete prices. Changes are live for citizens immediately. A product that appears in saved orders cannot be deleted, because that would silently change past order totals. |
+| **Orders** | Every saved cart with its lines and total (at today's prices). |
+| **Users** | Everyone who registered, how much they have used the site, and who is an admin. You cannot change your own role, so the last admin can never be removed by accident. |
+
+**Making an admin.** Pick one:
+
+```bash
+python manage.py seed_data                         # demo data; also creates admin / Admin@1234
+# creates the admin, or promotes the user if the username already exists (the password is read from the environment)
+APP_ADMIN_PASSWORD='a-strong-password' python manage.py create_app_admin --username boss --email boss@example.com
+```
+
+With Docker, set `APP_ADMIN_USERNAME`, `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` in `.env` and the admin is created on start. Existing admins can promote other users on the Users page. This role is separate from the Django admin account used for `/admin/` on the API server.
+
+**Design notes.**
+
+- Charts are hand-built SVG (no chart library), so every one has a hover tooltip, a keyboard mode (focus a chart, then use the arrow keys), a legend, and a **table view** with the same numbers. Marks are thin, bars have a 2px gap between segments, and the axes are recessive.
+- Colours come from a palette validated for colour-blind readers in both light and dark themes: complaint statuses are blue (Pending), orange (In Progress) and aqua (Resolved) everywhere (charts, badges, map), and orders and products use violet. A colour never means two things on the page. Statuses always carry an icon and a label as well as a colour.
+- There is a light and a dark theme (follows the system, with a toggle that is remembered). The layout works from phone width up: the sidebar becomes a menu and wide tables scroll inside their card.
+- The dashboard is a separate lazy-loaded bundle, so visitors who never open `/admin` do not download it.
+
+**Things to know.**
+
+- "Orders" are saved carts, dated by when the cart was created; order value uses today's prices because the app does not store the price at the time of purchase.
+- Each login replaces the user's token, so signing in on a second device signs the first one out. This is how the app already worked.
 
 ## Running with Docker
 
@@ -121,7 +173,7 @@ docker compose up --build
 
 `docker compose` refuses to start until `.env` exists and the database password and secret key are set.
 
-**What happens on start:** the database migrations run, then (with `SEED_DEMO_DATA=true`) the demo data from [seed_data](backend/api/management/commands/seed_data.py) is loaded, and the admin account from `DJANGO_SUPERUSER_*` is created if it doesn't exist yet. Demo app logins are `demo` / `Demo@1234`, `ali` / `Ali@1234` and `sara` / `Sara@1234`; the admin login is whatever you put in `.env`. Set `SEED_DEMO_DATA=false` for real data.
+**What happens on start:** the database migrations run, then (with `SEED_DEMO_DATA=true`) the demo data from [seed_data](backend/api/management/commands/seed_data.py) is loaded, and the admin account from `DJANGO_SUPERUSER_*` is created if it doesn't exist yet. Demo app logins are `demo` / `Demo@1234`, `ali` / `Ali@1234` and `sara` / `Sara@1234`; the Django admin login is whatever you put in `DJANGO_SUPERUSER_*`, and the dashboard admin is whatever you put in `APP_ADMIN_*` (both in `.env`). Set `SEED_DEMO_DATA=false` for real data.
 
 **Data is kept** in two Docker volumes (`pgdata` for the database, `media` for complaint photos), so `docker compose down` and `up` keep everything. `docker compose down -v` deletes it. Docker uses its own PostgreSQL, so data from a local `db.sqlite3` does not appear there.
 
@@ -205,7 +257,7 @@ DB_ENGINE=sqlite python manage.py test
 python manage.py seed_data            # safe to re-run; add --reset to wipe first, --no-admin to skip the admin user
 ```
 
-This creates 20 products (fruits and vegetables), three users, saved orders, an open cart, three complaints with map coordinates and some notifications.
+This creates 20 products (fruits and vegetables), three demo users plus nine "citizens" whose roughly two months of orders and complaints fill the dashboard charts, an open cart, complaints with map coordinates, notifications, and the dashboard admin.
 
 | Login | Username | Password |
 | --- | --- | --- |
@@ -213,8 +265,10 @@ This creates 20 products (fruits and vegetables), three users, saved orders, an 
 | App user | `ali` | `Ali@1234` |
 | App user | `sara` | `Sara@1234` |
 | Django admin | `admin` | `Admin@1234` |
+| Dashboard admin (open `/admin` after logging in) | `admin` | `Admin@1234` |
+| Citizens with activity history | `citizen1` … `citizen9` | `Citizen@1234` |
 
-These are throwaway development passwords: never run the seed command against a real deployment. Prices can be edited afterwards in `/admin/`.
+These are throwaway development passwords: never run the seed command against a real deployment. Prices can be edited afterwards on the dashboard's Products page.
 
 ### 4. Frontend
 

@@ -37,7 +37,8 @@ class UsergetView(APIView):
         if not user:
             return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
         return Response({
-            "username": user.username
+            "username": user.username,
+            "is_admin": user.is_admin,
         }, status=status.HTTP_200_OK)
 
 

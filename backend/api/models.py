@@ -26,6 +26,8 @@ class User(models.Model):
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     otp_attempts = models.PositiveSmallIntegerField(default=0)
+    # Can use the admin dashboard (/admin in the React app, /api/dashboard/ in the API)
+    is_admin = models.BooleanField(default=False)
     
     # New fields for token and expiry
     token = models.CharField(max_length=300, blank=True, null=True)

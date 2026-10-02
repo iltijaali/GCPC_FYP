@@ -34,6 +34,7 @@ class UserLoginSerializer(serializers.Serializer):
             "token": token,
             "token_expiry": user.token_expiry,
             "username": user.username,
+            "is_admin": user.is_admin,
         }
 
 

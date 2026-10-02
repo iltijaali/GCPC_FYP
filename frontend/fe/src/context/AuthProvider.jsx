@@ -16,7 +16,7 @@ export default function AuthProvider({ children }) {
     api
       .post('/get-me/', { token }, { auth: false })
       .then((data) => {
-        if (!cancelled) setUser({ username: data.username });
+        if (!cancelled) setUser({ username: data.username, isAdmin: Boolean(data.is_admin) });
       })
       .catch((err) => {
         // A rejected token is useless; a network failure may be temporary, so keep it.
@@ -46,7 +46,7 @@ export default function AuthProvider({ children }) {
       { auth: false },
     );
     setToken(data.token);
-    setUser({ username: data.username });
+    setUser({ username: data.username, isAdmin: Boolean(data.is_admin) });
     return data;
   }, []);
 

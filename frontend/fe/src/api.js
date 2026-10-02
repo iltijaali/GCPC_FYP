@@ -94,6 +94,41 @@ export async function request(path, { method = 'GET', body, auth = true, signal 
   return data;
 }
 
+// ?a=1&b=2 from an object, skipping empty values
+export function buildQuery(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.set(key, value);
+  });
+  const text = query.toString();
+  return text ? `?${text}` : '';
+}
+
+// Fetch a file with the login token and hand it to the browser as a download.
+export async function download(path, fallbackName = 'download') {
+  const token = getToken();
+  let response;
+  try {
+    response = await fetch(`${BASE}/api${path}`, { headers: token ? { Authorization: `MyToken ${token}` } : {} });
+  } catch {
+    throw new ApiError('Cannot reach the server. Check your connection and try again.', 0, null);
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new ApiError(messageFrom(data, `Download failed (${response.status}).`), response.status, data);
+  }
+  const blob = await response.blob();
+  const match = /filename="?([^";]+)"?/.exec(response.headers.get('Content-Disposition') || '');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = match ? match[1] : fallbackName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
   get: (path, options) => request(path, { ...options, method: 'GET' }),
   post: (path, body, options) => request(path, { ...options, method: 'POST', body }),

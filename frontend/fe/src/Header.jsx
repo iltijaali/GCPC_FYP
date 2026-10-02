@@ -40,6 +40,7 @@ const Header = () => {
               <NavLink to="/cart" className={linkClass}>Cart</NavLink>
               <NavLink to="/complaints" className={linkClass}>Complaints</NavLink>
               <NavLink to="/history" className={linkClass}>History</NavLink>
+              {user.isAdmin && <NavLink to="/admin" className={linkClass}>Admin</NavLink>}
 
               <div className="flex items-center gap-2 text-yellow-300 font-medium">
                 <FaUserCircle className="text-xl" aria-hidden="true" />

@@ -16,7 +16,7 @@ export function mockApi(routes) {
   const fetchMock = vi.fn((url, init = {}) => {
     const path = String(url).replace('http://localhost:8000/api', '');
     const method = init.method || 'GET';
-    const route = routes.find((r) => r.method === method && r.path === path);
+    const route = routes.find((r) => r.method === method && (typeof r.path === 'string' ? r.path === path : r.path.test(path)));
     if (!route) return jsonResponse(404, { detail: `unmocked ${method} ${path}` });
     const body = init.body && typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
     return route.respond(body, init);

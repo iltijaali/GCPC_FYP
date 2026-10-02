@@ -123,3 +123,12 @@ describe('request', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 });
+
+describe('buildQuery', () => {
+  it('builds a query string and skips empty values', async () => {
+    const { buildQuery } = await import('./api');
+    expect(buildQuery({ status: 'Pending', search: '', page: 2, emailed: undefined, days: null })).toBe('?status=Pending&page=2');
+    expect(buildQuery({})).toBe('');
+    expect(buildQuery({ search: 'a b&c' })).toBe('?search=a+b%26c');
+  });
+});

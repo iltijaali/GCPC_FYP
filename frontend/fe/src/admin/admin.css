@@ -1,0 +1,242 @@
+/* Admin dashboard design tokens and shared component classes.
+   The chrome is deliberately quiet (cool slate neutrals) so the data is the only loud thing on the page.
+   Chart colours come from the validated data-viz palette (see README, "Admin dashboard"): complaint statuses =
+   categorical slots 1-3, commerce charts = slot 7. They were re-validated against these exact surfaces.
+   Every token has a light and a dark value; dark is selected for the dark surface, not an automatic inversion. */
+
+.admin-root {
+  color-scheme: light;
+  --plane: #f3f5fa;
+  --surface-1: #ffffff;
+  --surface-2: #f5f7fb;
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --muted: #64748b;
+  --grid: #edf0f6;
+  --axis: #cbd3e1;
+  --border: rgba(15, 23, 42, 0.08);
+  --hover: rgba(15, 23, 42, 0.045);
+  --primary: #0f172a;          /* main buttons: neutral, so it never competes with a data colour */
+  --primary-ink: #ffffff;
+  --accent: #2347c5;           /* links and small highlights only */
+  --accent-soft: rgba(35, 71, 197, 0.09);
+  --focus: #2a78d6;
+  --danger: #c8372d;
+  --danger-soft: rgba(200, 55, 45, 0.10);
+  --good-text: #006300;
+  --bad-text: #b42318;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+
+  --sidebar: linear-gradient(180deg, #111c36 0%, #0b1224 100%);
+  --sidebar-ink: #e2e8f0;
+  --sidebar-muted: #8391a9;
+  --sidebar-active: rgba(255, 255, 255, 0.08);
+  --hero: linear-gradient(135deg, #0f172a 0%, #1b2a4e 55%, #2b4a8f 100%);
+
+  /* data colours: complaint statuses (categorical 1-3) and commerce (7) */
+  --s-pending: #2a78d6;
+  --s-progress: #eb6834;
+  --s-resolved: #1baf7a;
+  --s-commerce: #4a3aa7;
+  --s-other: #b9b8b0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-root:not([data-theme="light"]) { /* same values as [data-theme="dark"] below */
+    color-scheme: dark;
+    --plane: #0a0f1d;
+    --surface-1: #121a2c;
+    --surface-2: #19233a;
+    --ink: #f1f5f9;
+    --ink-2: #b4c0d6;
+    --muted: #8a97ae;
+    --grid: #1e2941;
+    --axis: #34415e;
+    --border: rgba(255, 255, 255, 0.08);
+    --hover: rgba(255, 255, 255, 0.05);
+    --primary: #e8eefc;
+    --primary-ink: #0a0f1d;
+    --accent: #8fb0ff;
+    --accent-soft: rgba(143, 176, 255, 0.14);
+    --focus: #6da7ec;
+    --danger: #f0716b;
+    --danger-soft: rgba(240, 113, 107, 0.14);
+    --good-text: #0ca30c;
+    --bad-text: #f0716b;
+    --shadow: none;
+    --sidebar: linear-gradient(180deg, #0d1426 0%, #070b16 100%);
+    --hero: linear-gradient(135deg, #17233f 0%, #1b2d57 60%, #234281 100%);
+    --s-pending: #3987e5;
+    --s-progress: #d95926;
+    --s-resolved: #199e70;
+    --s-commerce: #9085e9;
+    --s-other: #4b4a46;
+  }
+}
+
+.admin-root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane: #0a0f1d;
+  --surface-1: #121a2c;
+  --surface-2: #19233a;
+  --ink: #f1f5f9;
+  --ink-2: #b4c0d6;
+  --muted: #8a97ae;
+  --grid: #1e2941;
+  --axis: #34415e;
+  --border: rgba(255, 255, 255, 0.08);
+  --hover: rgba(255, 255, 255, 0.05);
+  --primary: #e8eefc;
+  --primary-ink: #0a0f1d;
+  --accent: #8fb0ff;
+  --accent-soft: rgba(143, 176, 255, 0.14);
+  --focus: #6da7ec;
+  --danger: #f0716b;
+  --danger-soft: rgba(240, 113, 107, 0.14);
+  --good-text: #0ca30c;
+  --bad-text: #f0716b;
+  --shadow: none;
+  --sidebar: linear-gradient(180deg, #0d1426 0%, #070b16 100%);
+  --hero: linear-gradient(135deg, #17233f 0%, #1b2d57 60%, #234281 100%);
+  --s-pending: #3987e5;
+  --s-progress: #d95926;
+  --s-resolved: #199e70;
+  --s-commerce: #9085e9;
+  --s-other: #4b4a46;
+}
+
+/* Component styles live in Tailwind's `components` layer, so utility classes such as `lg:hidden` still win. */
+@layer components {
+/* ---------- base ---------- */
+.admin-root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--plane);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.admin-root *:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.admin-root h1, .admin-root h2, .admin-root h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+.admin-root .num { font-variant-numeric: tabular-nums; }
+.admin-root .muted { color: var(--muted); }
+.admin-root .ink-2 { color: var(--ink-2); }
+
+/* ---------- surfaces ---------- */
+.adm-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.adm-card-pad { padding: 18px 20px; }
+.adm-refetching { opacity: 0.55; transition: opacity 0.15s; }
+
+/* ---------- controls ---------- */
+.adm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 36px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 13px;
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--ink);
+  cursor: pointer; transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.adm-btn:hover:not(:disabled) { background: var(--hover); }
+.adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.adm-btn-primary { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+.adm-btn-primary:hover:not(:disabled) { background: var(--primary); filter: brightness(1.18); }
+.adm-btn-danger { background: var(--danger); color: #fff; border-color: transparent; }
+.adm-btn-danger:hover:not(:disabled) { background: var(--danger); filter: brightness(1.08); }
+.adm-btn-ghost { border-color: transparent; background: transparent; }
+.adm-btn-sm { height: 30px; padding: 0 10px; font-size: 12.5px; border-radius: 8px; }
+.adm-icon-btn { width: 36px; padding: 0; }
+
+.adm-input, .adm-select {
+  height: 36px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--surface-1); color: var(--ink); padding: 0 12px; font-size: 13.5px; min-width: 0;
+}
+.adm-input::placeholder { color: var(--muted); }
+.adm-input:focus, .adm-select:focus { outline: 2px solid var(--focus); outline-offset: 0; }
+.adm-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+.adm-error { color: var(--bad-text); font-size: 12.5px; margin-top: 5px; }
+
+.adm-segmented { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
+.adm-segmented button {
+  height: 30px; padding: 0 12px; border-radius: 7px; border: 0; background: transparent;
+  color: var(--ink-2); font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+}
+.adm-segmented button:hover { background: var(--hover); }
+.adm-segmented button[aria-pressed="true"], .adm-segmented button[aria-checked="true"] { background: var(--surface-1); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+/* ---------- table ---------- */
+.adm-table-wrap { overflow-x: auto; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.adm-table th {
+  text-align: left; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); padding: 10px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface-1);
+}
+.adm-table td { padding: 12px 16px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+.adm-table tbody tr:last-child td { border-bottom: 0; }
+.adm-table tbody tr.adm-row:hover { background: var(--hover); }
+.adm-table th.num, .adm-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.adm-sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.adm-sort:hover { color: var(--ink); }
+
+/* ---------- badges ---------- */
+.adm-badge {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--border); white-space: nowrap;
+}
+.adm-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+/* ---------- hero + icon chips ---------- */
+.adm-hero { background: var(--hero); color: #fff; border-color: transparent; position: relative; overflow: hidden; }
+.adm-hero::after { content: ""; position: absolute; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(143,176,255,0.28), transparent 70%); pointer-events: none; }
+.adm-hero .ink-2, .adm-hero .muted { color: rgba(255, 255, 255, 0.74); }
+.adm-hero a { color: #d6e3ff !important; }
+.adm-chip { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--border); }
+.adm-hero .adm-chip { background: rgba(255, 255, 255, 0.12); color: #d6e3ff; border-color: rgba(255, 255, 255, 0.12); }
+
+/* ---------- layout ---------- */
+.adm-sidebar { background: var(--sidebar); color: var(--sidebar-ink); border-right: 1px solid rgba(255,255,255,0.04); }
+.adm-nav-link {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; color: var(--sidebar-ink);
+  font-weight: 500; text-decoration: none; transition: background 0.12s;
+}
+.adm-nav-link:hover { background: var(--sidebar-active); }
+.adm-nav-link[aria-current="page"] { background: var(--sidebar-active); color: #fff; box-shadow: inset 3px 0 0 #8aa4ff; }
+.adm-topbar { background: color-mix(in srgb, var(--plane) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+
+/* ---------- charts ---------- */
+.adm-chart text { font-family: inherit; }
+.adm-tooltip {
+  position: absolute; pointer-events: none; z-index: 20; min-width: 150px; max-width: 260px;
+  background: var(--surface-1); color: var(--ink); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18); padding: 10px 12px; font-size: 12.5px;
+}
+.adm-tooltip .tt-title { color: var(--ink-2); font-weight: 600; margin-bottom: 6px; }
+.adm-tooltip .tt-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 1px 0; }
+.adm-tooltip .tt-key { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.adm-tooltip .tt-val { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.adm-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.adm-legend-item { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 12.5px; }
+.adm-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+}
+
+/* a pinned map must not sit above the sticky top bar or drawers */
+.admin-root .leaflet-container { z-index: 0; border-radius: 10px; font-family: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root * { transition: none !important; animation: none !important; }
+}
+
+/* map pins: status colour + a surface-coloured ring, same hues as the charts */
+.admin-root .adm-pin-pending { fill: var(--s-pending); stroke: var(--surface-1); fill-opacity: 1; stroke-opacity: 1; }
+.admin-root .adm-pin-progress { fill: var(--s-progress); stroke: var(--surface-1); fill-opacity: 1; stroke-opacity: 1; }
+.admin-root .adm-pin-resolved { fill: var(--s-resolved); stroke: var(--surface-1); fill-opacity: 1; stroke-opacity: 1; }
+
+/* OSM tiles are light; in dark mode invert them (pins are SVG, so they keep their colours) */
+.admin-root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.55); }
+@media (prefers-color-scheme: dark) {
+  .admin-root:not([data-theme="light"]) .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.55); }
+}

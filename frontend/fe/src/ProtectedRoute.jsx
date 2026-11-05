@@ -1,42 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './context/useAuth';
+import Loading from './components/Loading';
 
+// Shows the page only for a logged-in user; otherwise sends them to /auth and back afterwards.
 const ProtectedRoute = ({ element }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setIsAuthenticated(false);
-        return;
-      }
-
-      try {
-        const response = await fetch('http://localhost:8000/api/get-me/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token }),
-        });
-
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (isAuthenticated === null) return null; // or a loading spinner
-  return isAuthenticated ? element : <Navigate to="/auth" />;
+  if (loading) return <Loading />;
+  return user ? element : <Navigate to="/auth" replace state={{ from: location.pathname }} />;
 };
 
 export default ProtectedRoute;

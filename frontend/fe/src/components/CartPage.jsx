@@ -1,22 +1,53 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { api } from '../api';
 import { useToast } from '../context/useToast';
 import Loading from './Loading';
 
-// Edits locally while typing and only calls the API once the value is committed.
+const AUTOSAVE_MS = 500;
+
+// The quantity box. Every change (typing, the up/down arrows, the keyboard arrows) is saved on its own half a
+// second after the last one, so the total keeps up without having to click elsewhere, and a burst of quick clicks
+// becomes ONE save. Leaving the box or pressing Enter saves immediately. Empty, 0 and negative values are never
+// saved: while you are typing they are left alone, and on leaving the box the real quantity comes back.
 const QuantityInput = ({ item, onCommit }) => {
   const [value, setValue] = useState(String(item.quantity));
+  const [synced, setSynced] = useState(0);   // bumped when an edit ends, so the box re-reads the server's value
+  const latest = useRef(value);              // what is in the box right now
+  const editing = useRef(false);             // a ref, not state: an effect that runs late must still see the truth
+  const timer = useRef(null);
 
-  useEffect(() => setValue(String(item.quantity)), [item.quantity]);
-
-  const commit = () => {
-    const qty = Number.parseInt(value, 10);
-    if (!Number.isInteger(qty) || qty < 1) {
-      setValue(String(item.quantity)); // reject empty, 0 and negatives
-      return;
+  // Follow the server's quantity whenever the user is not in the middle of an edit.
+  useEffect(() => {
+    if (!editing.current) {
+      latest.current = String(item.quantity);
+      setValue(latest.current);
     }
-    if (qty !== item.quantity) onCommit(item.id, qty);
+  }, [item.quantity, synced]);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const finish = () => {
+    editing.current = false;
+    setSynced((n) => n + 1);
+  };
+
+  const save = async (text, leaving) => {
+    clearTimeout(timer.current);
+    const qty = Number.parseInt(text, 10);
+    const valid = Number.isInteger(qty) && qty >= 1;
+    if (!valid && !leaving) return;                            // still typing: wait
+    if (valid && qty !== item.quantity) await onCommit(item.id, qty);
+    if (leaving || latest.current === text) finish();          // done (or nothing newer was typed meanwhile)
+  };
+
+  const onChange = (e) => {
+    const text = e.target.value;
+    editing.current = true;
+    latest.current = text;
+    setValue(text);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => save(text, false), AUTOSAVE_MS);
   };
 
   return (
@@ -26,8 +57,8 @@ const QuantityInput = ({ item, onCommit }) => {
       step="1"
       value={value}
       aria-label={`Quantity of ${item.product}`}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={commit}
+      onChange={onChange}
+      onBlur={() => save(latest.current, true)}
       onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
       className="border w-16 p-1 rounded text-center"
     />
@@ -39,6 +70,13 @@ const Cart = () => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Cart changes run one after another, so "Save Cart" can never overtake a quantity change that is still on its way.
+  const queue = useRef(Promise.resolve());
+  const enqueue = (task) => {
+    const run = queue.current.then(task);
+    queue.current = run.catch(() => {});
+    return run;
+  };
 
   const fetchCart = useCallback(async () => {
     try {
@@ -55,37 +93,41 @@ const Cart = () => {
     fetchCart();
   }, [fetchCart]);
 
-  const updateQuantity = async (itemId, quantity) => {
-    try {
-      await api.patch(`/cart-items/${itemId}/`, { quantity });
-      await fetchCart();
-    } catch (err) {
-      toast.error(err.message);
-      fetchCart();
-    }
-  };
+  const updateQuantity = (itemId, quantity) =>
+    enqueue(async () => {
+      try {
+        await api.patch(`/cart-items/${itemId}/`, { quantity });
+        await fetchCart();
+      } catch (err) {
+        toast.error(err.message);
+        await fetchCart();   // show what the server really has
+      }
+    });
 
-  const removeItem = async (itemId) => {
-    try {
-      await api.del(`/cart-items/${itemId}/`);
-      await fetchCart();
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
+  const removeItem = (itemId) =>
+    enqueue(async () => {
+      try {
+        await api.del(`/cart-items/${itemId}/`);
+        await fetchCart();
+      } catch (err) {
+        toast.error(err.message);
+      }
+    });
 
-  const saveCart = async () => {
-    if (!cart) return;
+  const saveCart = () => {
+    if (!cart) return undefined;
     setSaving(true);
-    try {
-      await api.post(`/cart/${cart.id}/save_cart/`);
-      toast.success('Cart saved. You can find it in your history.');
-      setCart(null);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setSaving(false);
-    }
+    return enqueue(async () => {
+      try {
+        await api.post(`/cart/${cart.id}/save_cart/`);
+        toast.success('Cart saved. You can find it in your history.');
+        setCart(null);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   return (

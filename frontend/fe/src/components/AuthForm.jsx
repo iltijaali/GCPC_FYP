@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
+import PasswordInput from './PasswordInput';
 
 const MIN_PASSWORD = 6;
 const EMPTY = { email: '', password: '', username: '', fullname: '' };
@@ -120,8 +121,8 @@ const AuthForm = () => {
 
           <div>
             <label htmlFor="password" className="block font-semibold mb-1">Password</label>
-            <input
-              type="password"
+            <PasswordInput
+              key={isLogin ? 'login' : 'register'}   // a revealed password must not carry over to the other form
               name="password"
               id="password"
               value={formData.password}

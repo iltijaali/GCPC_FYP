@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../context/useToast';
+import PasswordInput from './PasswordInput';
 
 const MIN_PASSWORD = 6;
 const INPUT =
@@ -130,9 +131,8 @@ const ForgotPasswordPage = () => {
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
               <label htmlFor="reset-password" className="block font-semibold mb-1">New Password</label>
-              <input
+              <PasswordInput
                 id="reset-password"
-                type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder={`At least ${MIN_PASSWORD} characters`}

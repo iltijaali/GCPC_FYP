@@ -518,3 +518,62 @@ class CorsTests(TestCase):
 
     def test_other_origins_are_not(self):
         self.assertIsNone(self.preflight('https://evil.example').headers.get('Access-Control-Allow-Origin'))
+
+
+class LoginOnlyTouchesTheTokenTests(TestCase):
+    """Logging in must not overwrite changes someone else made to the same user while the login was running.
+
+    A login loads the user, checks the (slow) password hash, then stores a new token. It used to save the whole
+    row, so anything changed in between (a role change, a freshly issued OTP, a counted wrong guess, a new
+    password) was silently put back to its old value.
+    """
+
+    def setUp(self):
+        self.user = make_user('racer', is_admin=False)
+
+    def during_login(self, **change):
+        """Run the end of a login after `change` was made by someone else, and return the stored user."""
+        stale = User.objects.get(pk=self.user.pk)               # what the login loaded when it started
+        User.objects.filter(pk=self.user.pk).update(**change)   # ...then another request changed the user
+        stale.generate_token()                                  # ...and only now the login stores its token
+        return User.objects.get(pk=self.user.pk)
+
+    def test_a_promotion_made_during_login_survives(self):
+        self.assertTrue(self.during_login(is_admin=True).is_admin)
+
+    def test_a_demotion_made_during_login_survives(self):
+        User.objects.filter(pk=self.user.pk).update(is_admin=True)
+        self.assertFalse(self.during_login(is_admin=False).is_admin)
+
+    def test_an_otp_issued_during_login_survives(self):
+        user = self.during_login(otp='123456', otp_created_at=timezone.now())
+        self.assertEqual(user.otp, '123456')
+        self.assertIsNotNone(user.otp_created_at)
+
+    def test_a_wrong_guess_counted_during_login_survives(self):
+        self.assertEqual(self.during_login(otp_attempts=3).otp_attempts, 3)
+
+    def test_a_password_change_made_during_login_survives(self):
+        other = make_user('someone-else', password='the-new-password').password
+        self.assertEqual(self.during_login(password=other).password, other)
+
+    def test_login_still_stores_a_working_token_with_an_expiry(self):
+        user = self.during_login()
+        self.assertTrue(user.token)
+        self.assertGreater(user.token_expiry, timezone.now() + timedelta(days=14))
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f'MyToken {user.token}')
+        self.assertEqual(client.get('/api/cart/').status_code, 200)
+
+    def test_through_the_real_login_endpoint_a_role_change_during_the_password_check_survives(self):
+        original = User.check_password
+
+        def slow_check(user, raw_password):
+            # the password check is the slow part of a login: an admin promotes the user while it runs
+            User.objects.filter(pk=user.pk).update(is_admin=True)
+            return original(user, raw_password)
+
+        with mock.patch.object(User, 'check_password', slow_check):
+            response = APIClient().post('/api/login/', {'username_or_email': 'racer', 'password': 'pass1234'}, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.get(pk=self.user.pk).is_admin)

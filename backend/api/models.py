@@ -104,7 +104,10 @@ class User(models.Model):
         
         self.token = f"{encrypted_username}_{random_part}"
         self.token_expiry = timezone.now() + timedelta(days=15)
-        self.save()
+        # Store only what this method changed. A login holds a copy of the user for as long as the (slow) password
+        # check takes, so saving the whole row would overwrite anything changed meanwhile: a role change, a new
+        # OTP, a counted wrong guess.
+        self.save(update_fields=['token', 'token_expiry'])
         return self.token
 
 

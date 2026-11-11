@@ -13,20 +13,34 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 
+try:
+    from dotenv import load_dotenv
+except ImportError:  # python-dotenv is optional; plain environment variables still work
+    load_dotenv = None
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+if load_dotenv:
+    load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-h)@#4j%7kc=*dy6vzgnemzbudrueo#v%+g8^l4@!u%b7#jdf0n'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = []
+# Local development only: fall back to a throwaway key. Any other setup must set DJANGO_SECRET_KEY.
+if not SECRET_KEY:
+    if not DEBUG:
+        raise RuntimeError('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off.')
+    SECRET_KEY = 'insecure-dev-only-key'
+
+ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h]
 
 
 # Application definition
@@ -48,16 +62,19 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # CORS must come before anything that can generate a response (CommonMiddleware included)
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # CORS Middleware
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
+
+# Outside debug mode Django no longer serves static files itself; WhiteNoise does (after `collectstatic`).
+if not DEBUG:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'gcpc_fyp.urls'
 
@@ -82,16 +99,24 @@ WSGI_APPLICATION = 'gcpc_fyp.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gcpc_db',  # apna database name yahan do
-        'USER': 'postgres',  # apna postgres user
-        'PASSWORD': '1234',  # apna password
-        'HOST': 'localhost',
-        'PORT': '5432',
+if os.environ.get('DB_ENGINE') == 'sqlite':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.environ.get('DB_SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'gcpc_db'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 
 
@@ -130,6 +155,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -142,6 +168,13 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_THROTTLE_RATES': {
+        # Per client IP, generous enough for many people behind one office/proxy address.
+        # The strict per-account limits (5 wrong OTP tries, 10-minute expiry) do the real protecting.
+        'login': '20/min',
+        'otp': '30/min',         # request-reset-password, verify-otp and reset-password together
+        'complaint': '10/hour',  # each complaint sends an email
+    },
 }
 
 SIMPLE_JWT = {
@@ -152,11 +185,25 @@ SIMPLE_JWT = {
 
 # setup django cors headers
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Only these browser origins may call the API. Defaults cover the local dev servers
+# (Vite on 5173, the static pages on 5500, port 3000); set CORS_ALLOWED_ORIGINS
+# (comma-separated) for any other frontend address.
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Example for frontend running on localhost:3000
-    "http://127.0.0.1:5500", # Example for frontend running on localhost:5500
+    o.strip()
+    for o in os.environ.get(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,'
+        'http://localhost:5500,http://127.0.0.1:5500',
+    ).split(',')
+    if o.strip()
 ]
+
+# Send complaint emails from a background thread so the request returns immediately.
+EMAIL_ASYNC = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Django serves uploaded complaint photos itself in debug mode. Set SERVE_MEDIA=True to keep doing so
+# without debug (fine for a demo or small deployment; use a web server or object storage at scale).
+SERVE_MEDIA = os.environ.get('SERVE_MEDIA', str(DEBUG)).lower() in ('1', 'true', 'yes')

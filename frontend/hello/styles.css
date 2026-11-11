@@ -265,3 +265,38 @@ button:hover {
         padding: 20px;
     }
 }
+
+/* ====== Show / hide password (see password-toggle.js) ====== */
+.password-field {
+    position: relative;
+}
+
+.password-field input {
+    padding-right: 70px;
+}
+
+/* the generic `button` rule above is for big action buttons, so reset it for this small one */
+.password-field .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: auto;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    background: none;
+    color: #004080;
+    box-shadow: none;
+    border-radius: 6px;
+}
+
+.password-field .toggle-password:hover {
+    background: rgba(0, 64, 128, 0.1);
+    transform: translateY(-50%);
+    box-shadow: none;
+}
+
+.password-field .toggle-password:focus-visible {
+    outline: 2px solid #004080;
+    outline-offset: 1px;
+}
